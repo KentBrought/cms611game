@@ -1,0 +1,146 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!1001 &6206799087589136646
+PrefabInstance:
+  m_ObjectHideFlags: 0
+  serializedVersion: 2
+  m_Modification:
+    serializedVersion: 3
+    m_TransformParent: {fileID: 0}
+    m_Modifications:
+    - target: {fileID: 375226088063364274, guid: fc1776de97c416e4eb860a533d985337, type: 3}
+      propertyPath: m_Name
+      value: SpaceshipWithForces Variant
+      objectReference: {fileID: 0}
+    - target: {fileID: 375226088063364274, guid: fc1776de97c416e4eb860a533d985337, type: 3}
+      propertyPath: m_IsActive
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 2172398432301830940, guid: fc1776de97c416e4eb860a533d985337, type: 3}
+      propertyPath: m_LocalScale.x
+      value: 0.3
+      objectReference: {fileID: 0}
+    - target: {fileID: 2172398432301830940, guid: fc1776de97c416e4eb860a533d985337, type: 3}
+      propertyPath: m_LocalScale.y
+      value: 0.5
+      objectReference: {fileID: 0}
+    - target: {fileID: 2172398432301830940, guid: fc1776de97c416e4eb860a533d985337, type: 3}
+      propertyPath: m_LocalScale.z
+      value: 0.5
+      objectReference: {fileID: 0}
+    - target: {fileID: 3800518268107562452, guid: fc1776de97c416e4eb860a533d985337, type: 3}
+      propertyPath: m_LocalScale.x
+      value: 3
+      objectReference: {fileID: 0}
+    - target: {fileID: 3800518268107562452, guid: fc1776de97c416e4eb860a533d985337, type: 3}
+      propertyPath: m_LocalScale.y
+      value: 2
+      objectReference: {fileID: 0}
+    - target: {fileID: 4111278111048567520, guid: fc1776de97c416e4eb860a533d985337, type: 3}
+      propertyPath: m_text
+      value: 'Spin
+
+        Forces'
+      objectReference: {fileID: 0}
+    - target: {fileID: 4111278111048567520, guid: fc1776de97c416e4eb860a533d985337, type: 3}
+      propertyPath: m_fontSize
+      value: 2.9
+      objectReference: {fileID: 0}
+    - target: {fileID: 4538731377129334578, guid: fc1776de97c416e4eb860a533d985337, type: 3}
+      propertyPath: m_LinearDrag
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 4713840110795586676, guid: fc1776de97c416e4eb860a533d985337, type: 3}
+      propertyPath: m_RootOrder
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 5320766777561217560, guid: fc1776de97c416e4eb860a533d985337, type: 3}
+      propertyPath: m_Sprite
+      value: 
+      objectReference: {fileID: 21300000, guid: a8a1c670456e2e04ba91160a0255ea0a, type: 3}
+    m_RemovedComponents:
+    - {fileID: 4354427107887596352, guid: fc1776de97c416e4eb860a533d985337, type: 3}
+    - {fileID: 662549327655783422, guid: fc1776de97c416e4eb860a533d985337, type: 3}
+    m_RemovedGameObjects: []
+    m_AddedGameObjects: []
+    m_AddedComponents:
+    - targetCorrespondingSourceObject: {fileID: 375226088063364274, guid: fc1776de97c416e4eb860a533d985337, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 1230306634}
+    - targetCorrespondingSourceObject: {fileID: 9128374830389810678, guid: fc1776de97c416e4eb860a533d985337, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 656183056}
+  m_SourcePrefab: {fileID: 100100000, guid: fc1776de97c416e4eb860a533d985337, type: 3}
+--- !u!1 &2921844853169474800 stripped
+GameObject:
+  m_CorrespondingSourceObject: {fileID: 9128374830389810678, guid: fc1776de97c416e4eb860a533d985337, type: 3}
+  m_PrefabInstance: {fileID: 6206799087589136646}
+  m_PrefabAsset: {fileID: 0}
+--- !u!60 &656183056
+PolygonCollider2D:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2921844853169474800}
+  m_Enabled: 1
+  m_Density: 1
+  m_Material: {fileID: 0}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_LayerOverridePriority: 0
+  m_ForceSendLayers:
+    serializedVersion: 2
+    m_Bits: 4294967295
+  m_ForceReceiveLayers:
+    serializedVersion: 2
+    m_Bits: 4294967295
+  m_ContactCaptureLayers:
+    serializedVersion: 2
+    m_Bits: 4294967295
+  m_CallbackLayers:
+    serializedVersion: 2
+    m_Bits: 4294967295
+  m_IsTrigger: 0
+  m_UsedByEffector: 0
+  m_UsedByComposite: 0
+  m_Offset: {x: 0, y: 0}
+  m_SpriteTilingProperty:
+    border: {x: 0, y: 0, z: 0, w: 0}
+    pivot: {x: 0.5, y: 0.5}
+    oldSize: {x: 2.56, y: 2.56}
+    newSize: {x: 1, y: 1}
+    adaptiveTilingThreshold: 0.5
+    drawMode: 0
+    adaptiveTiling: 0
+  m_AutoTiling: 0
+  m_Points:
+    m_Paths:
+    - - {x: -1.2795296, y: -0.9403941}
+      - {x: -0.0033492278, y: 1.2524791}
+      - {x: 1.2683374, y: -0.9403941}
+  m_UseDelaunayMesh: 0
+--- !u!1 &5987510145482094004 stripped
+GameObject:
+  m_CorrespondingSourceObject: {fileID: 375226088063364274, guid: fc1776de97c416e4eb860a533d985337, type: 3}
+  m_PrefabInstance: {fileID: 6206799087589136646}
+  m_PrefabAsset: {fileID: 0}
+--- !u!114 &1230306634
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5987510145482094004}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 32e420746f9b430590ffa9c10291851c, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  canActWhenDead: 0
+  maxThrustAcceleration: 10
+  maxAngularAcceleration: 360
