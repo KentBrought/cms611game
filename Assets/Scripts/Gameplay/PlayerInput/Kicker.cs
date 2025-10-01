@@ -84,15 +84,15 @@ namespace Scripts.Gameplay.PlayerInput
             if (addKickerVelocity)
             {
                 var myRigidBody = GetComponentInParent<Rigidbody2D>();
-                newVelocity += myRigidBody.velocity;
+                newVelocity += myRigidBody.linearVelocity;
             }
             
             if (addTargetVelocity)
             {
-                newVelocity += ballRigidBody2d.velocity;
+                newVelocity += ballRigidBody2d.linearVelocity;
             }
 
-            var deltaVelocity = newVelocity - ballRigidBody2d.velocity;
+            var deltaVelocity = newVelocity - ballRigidBody2d.linearVelocity;
             
             // Use impulse because it's an instantaneous velocity change.
             ballRigidBody2d.AddForce(deltaVelocity * ballRigidBody2d.mass, ForceMode2D.Impulse);

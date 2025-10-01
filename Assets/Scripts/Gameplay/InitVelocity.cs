@@ -26,7 +26,7 @@ namespace Scripts.Gameplay
             var rigidBody = GetComponent<Rigidbody2D>();
             if (rigidBody != null)
             {
-                rigidBody.velocity = this.initialVelocity;
+                rigidBody.linearVelocity = this.initialVelocity;
             }
         }
     }

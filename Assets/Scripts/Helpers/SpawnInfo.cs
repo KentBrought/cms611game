@@ -85,7 +85,7 @@ namespace Scripts.Helpers
                 var parentRigidBody = relativeVelocityProvider.GetComponent<Rigidbody2D>();
                 if (parentRigidBody)
                 {
-                    velocity += parentRigidBody.velocity;
+                    velocity += parentRigidBody.linearVelocity;
                 }
                 else
                 {
@@ -94,7 +94,7 @@ namespace Scripts.Helpers
                 }
             }
 
-            spawnedRigidBody.velocity = velocity;
+            spawnedRigidBody.linearVelocity = velocity;
         }
 
         public Transform Spawn(Transform relativePositionProvider, Transform childPrefab, Transform parent = null)

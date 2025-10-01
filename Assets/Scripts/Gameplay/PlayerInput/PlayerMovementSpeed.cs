@@ -16,7 +16,7 @@ namespace Scripts.Gameplay.PlayerInput
             var movementDelta = GetMoveInput();
 
             // Instantly set the velocity of the player to match the input.
-            this.cachedRigidbody2D.velocity = movementDelta * this.maxSpeed;
+            this.cachedRigidbody2D.linearVelocity = movementDelta * this.maxSpeed;
         }
     }
 }

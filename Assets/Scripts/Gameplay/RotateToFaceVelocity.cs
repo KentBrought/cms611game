@@ -21,7 +21,7 @@ namespace Scripts.Gameplay
         {
             if (!this.cachedRigidbody) return;
             
-            var velocity = this.cachedRigidbody.velocity;
+            var velocity = this.cachedRigidbody.linearVelocity;
             var direction = velocity.normalized;
             var angle = Mathf.Atan2(direction.y, direction.x) * Mathf.Rad2Deg;
             var degrees = angle + degFacingOffset;

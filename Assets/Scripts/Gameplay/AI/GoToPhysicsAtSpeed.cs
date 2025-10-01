@@ -30,7 +30,7 @@ namespace Scripts.Gameplay.AI
             Vector2 toDestination = this.DestinationProvider.CurrentDestination.Value - (Vector2) transform.position;
             var desiredVelocity = CalculateDesiredVelocity(toDestination);
 
-            Vector2 desiredDeltaV = desiredVelocity - this.cachedRigidbody2D.velocity;
+            Vector2 desiredDeltaV = desiredVelocity - this.cachedRigidbody2D.linearVelocity;
             Vector2 desiredAcceleration = desiredDeltaV / Time.fixedDeltaTime;
             
             // Cap acceleration.
