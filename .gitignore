@@ -77,3 +77,6 @@ crashlytics-build.properties
 
 # Plastic SCM
 .plastic/
+
+# Plugins
+/[Aa]ssets/[Pp]lugins/*
