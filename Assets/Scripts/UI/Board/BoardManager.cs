@@ -1,5 +1,6 @@
 using UnityEngine;
 using UnityEngine.Tilemaps;
+using System.Collections.Generic;
 
 public class CellData
 {
@@ -7,6 +8,7 @@ public class CellData
 }
 public class BoardManager : MonoBehaviour
 {
+    
     private Tilemap m_Tilemap;
     private CellData[,] m_BoardData;
 
@@ -15,6 +17,22 @@ public class BoardManager : MonoBehaviour
     public Tile[] GroundTiles;
     public Tile[] WallTiles;
     private Grid m_Grid;
+
+    // list of obstacles at [(2,3), (3,3), (4,3), (7,2), (8,2), (7,5), (8,8), (9,7), (3,7), (3,8), (4,9)]
+    private List<Vector2Int> m_Obstacles = new List<Vector2Int>
+    {
+        new Vector2Int(2, 3),
+        new Vector2Int(3, 3),
+        new Vector2Int(4, 3),
+        new Vector2Int(7, 2),
+        new Vector2Int(8, 2),
+        new Vector2Int(7, 5),
+        new Vector2Int(8, 8),
+        new Vector2Int(9, 7),
+        new Vector2Int(3, 7),
+        new Vector2Int(3, 8),
+        new Vector2Int(4, 8)
+    };
 
 
     // Start is called before the first frame update
@@ -39,7 +57,11 @@ public class BoardManager : MonoBehaviour
             Tile tile;
             m_BoardData[x, y] = new CellData();
 
-            if(x == 0 || y == 0 || x == Width - 1 || y == Height - 1)
+            // Check if this position is a wall (border) or obstacle
+            bool isWall = (x == 0 || y == 0 || x == Width - 1 || y == Height - 1);
+            bool isObstacle = m_Obstacles.Contains(new Vector2Int(x, y));
+            
+            if(isWall || isObstacle)
             {
                 tile = WallTiles[Random.Range(0, WallTiles.Length)];
                 m_BoardData[x, y].Passable = false;
