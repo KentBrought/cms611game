@@ -5,6 +5,7 @@ public class PlayerController : MonoBehaviour
 {
    private BoardManager m_Board;
    private Vector2Int m_CellPosition;
+   private bool m_IsMoving = false;
 
    public void Spawn(BoardManager boardManager, Vector2Int cell)
    {
@@ -21,6 +22,9 @@ public class PlayerController : MonoBehaviour
   
    private void Update()
    {
+       // Prevent multiple movements in the same frame
+       if (m_IsMoving) return;
+
        Vector2Int newCellTarget = m_CellPosition;
        bool hasMoved = false;
 
@@ -52,9 +56,17 @@ public class PlayerController : MonoBehaviour
 
            if(cellData != null && cellData.Passable)
            {
+               m_IsMoving = true;
                MoveTo(newCellTarget);
+               // Reset the moving flag after a short delay
+               Invoke(nameof(ResetMovingFlag), 0.1f);
            }
        }
+   }
+
+   private void ResetMovingFlag()
+   {
+       m_IsMoving = false;
    }
 
 }
