@@ -3,6 +3,8 @@ using UnityEngine.InputSystem;
 
 public class PlayerController : MonoBehaviour
 {
+   [SerializeField]
+   private PlayerRole m_Role = PlayerRole.Robber;
    private BoardManager m_Board;
    private Vector2Int m_CellPosition;
    private bool m_IsMoving = false;
@@ -17,6 +19,11 @@ public class PlayerController : MonoBehaviour
    {
        m_CellPosition = cell;
        transform.position = m_Board.CellToWorld(m_CellPosition);
+   }
+
+   public PlayerRole GetRole()
+   {
+       return m_Role;
    }
 
   
