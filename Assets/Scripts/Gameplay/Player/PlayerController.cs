@@ -1,5 +1,6 @@
 using UnityEngine;
 using UnityEngine.InputSystem;
+using System.Collections.Generic;
 
 public class PlayerController : MonoBehaviour
 {
@@ -8,17 +9,39 @@ public class PlayerController : MonoBehaviour
    private BoardManager m_Board;
    private Vector2Int m_CellPosition;
    private bool m_IsMoving = false;
+   private List<TreasureController> m_Treasures = new List<TreasureController>();
 
    public void Spawn(BoardManager boardManager, Vector2Int cell)
    {
        m_Board = boardManager;
+       
+       // Get role from RoleSelectionManager if available
+       if (RoleSelectionManager.Instance != null)
+       {
+           m_Role = RoleSelectionManager.Instance.GetPlayerRole();
+       }
+       
        MoveTo(cell);
+   }
+
+   public void RegisterTreasure(TreasureController treasure)
+   {
+       if (!m_Treasures.Contains(treasure))
+       {
+           m_Treasures.Add(treasure);
+       }
    }
   
    public void MoveTo(Vector2Int cell)
    {
        m_CellPosition = cell;
        transform.position = m_Board.CellToWorld(m_CellPosition);
+       
+       // Check for treasure collection if player is a robber
+       if (m_Role == PlayerRole.Robber)
+       {
+           CheckForTreasureCollection();
+       }
    }
 
    public PlayerRole GetRole()
@@ -74,6 +97,18 @@ public class PlayerController : MonoBehaviour
    private void ResetMovingFlag()
    {
        m_IsMoving = false;
+   }
+
+   private void CheckForTreasureCollection()
+   {
+       foreach (TreasureController treasure in m_Treasures)
+       {
+           if (treasure != null && !treasure.IsCollected() && treasure.GetCellPosition() == m_CellPosition)
+           {
+               treasure.Collect();
+               Debug.Log("Treasure collected by robber!");
+           }
+       }
    }
 
 }
