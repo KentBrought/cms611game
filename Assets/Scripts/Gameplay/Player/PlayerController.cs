@@ -6,6 +6,13 @@ public class PlayerController : MonoBehaviour
 {
    [SerializeField]
    private PlayerRole m_Role = PlayerRole.Robber;
+
+   [Header("Avatar Sprites")]
+   [SerializeField] private Sprite copSprite;
+   [SerializeField] private Sprite robberSprite;
+
+   private SpriteRenderer m_SpriteRenderer;
+
    private BoardManager m_Board;
    private Vector2Int m_CellPosition;
    private bool m_IsMoving = false;
@@ -16,6 +23,8 @@ public class PlayerController : MonoBehaviour
    private void Awake()
    {
        m_Turns = FindObjectOfType<TurnManager>();
+       m_SpriteRenderer = GetComponent<SpriteRenderer>();
+       ApplyRoleVisual();
    }
 
    public void Spawn(BoardManager boardManager, Vector2Int cell)
@@ -27,9 +36,22 @@ public class PlayerController : MonoBehaviour
        {
            m_Role = RoleSelectionManager.Instance.GetPlayerRole();
        }
-       
+       ApplyRoleVisual();
        MoveTo(cell);
    }
+   private void ApplyRoleVisual()
+   {
+       if (m_SpriteRenderer == null) return;
+       m_SpriteRenderer.sprite = (m_Role == PlayerRole.Cop) ? copSprite : robberSprite;
+   }
+
+#if UNITY_EDITOR
+   private void OnValidate()
+   {
+       if (m_SpriteRenderer == null) m_SpriteRenderer = GetComponent<SpriteRenderer>();
+       ApplyRoleVisual();
+   }
+#endif
 
    public void RegisterTreasure(TreasureController treasure)
    {
