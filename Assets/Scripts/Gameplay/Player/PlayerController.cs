@@ -17,6 +17,7 @@ public class PlayerController : MonoBehaviour
    private Vector2Int m_CellPosition;
    private bool m_IsMoving = false;
    private List<TreasureController> m_Treasures = new List<TreasureController>();
+   private int m_CollectedCoins = 0;  // Track collected coins
    
     private TurnManager m_Turns;   // cache the turn manager
 
@@ -59,6 +60,11 @@ public class PlayerController : MonoBehaviour
        {
            m_Treasures.Add(treasure);
        }
+   }
+   
+   public int GetCollectedCoins()
+   {
+       return m_CollectedCoins;
    }
   
    public void MoveTo(Vector2Int cell)
@@ -143,7 +149,14 @@ public class PlayerController : MonoBehaviour
            if (treasure != null && !treasure.IsCollected() && treasure.GetCellPosition() == m_CellPosition)
            {
                treasure.Collect();
-               Debug.Log("Treasure collected by robber!");
+               m_CollectedCoins++;
+               Debug.Log("Treasure collected by robber! Total coins: " + m_CollectedCoins);
+               
+               // Notify TurnManager to update UI
+               if (m_Turns != null)
+               {
+                   m_Turns.UpdateCoinDisplay(m_CollectedCoins);
+               }
            }
        }
    }

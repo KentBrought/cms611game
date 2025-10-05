@@ -4,6 +4,7 @@ using UnityEngine.UI;
 public class TurnManager : MonoBehaviour
 {
     public Text turnCounterText; 
+    public Text coinCounterText;  // New UI text for coin display
     public Button nextTurnButton; 
     private int turnCount = 1;
     private bool hasMovedThisTurn = false;
@@ -11,6 +12,7 @@ public class TurnManager : MonoBehaviour
     void Start()
     {
         UpdateTurnCounter();
+        UpdateCoinDisplay(0);  // Initialize coin display
         nextTurnButton.onClick.AddListener(NextTurn);
     }
 
@@ -43,5 +45,13 @@ public class TurnManager : MonoBehaviour
     private void UpdateTurnCounter()
     {
         turnCounterText.text = "Turn: " + turnCount;
+    }
+    
+    public void UpdateCoinDisplay(int coinCount)
+    {
+        if (coinCounterText != null)
+        {
+            coinCounterText.text = "Coins: " + coinCount;
+        }
     }
 }
