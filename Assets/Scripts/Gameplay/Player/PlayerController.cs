@@ -10,6 +10,13 @@ public class PlayerController : MonoBehaviour
    private Vector2Int m_CellPosition;
    private bool m_IsMoving = false;
    private List<TreasureController> m_Treasures = new List<TreasureController>();
+   
+    private TurnManager m_Turns;   // cache the turn manager
+
+   private void Awake()
+   {
+       m_Turns = FindObjectOfType<TurnManager>();
+   }
 
    public void Spawn(BoardManager boardManager, Vector2Int cell)
    {
@@ -81,6 +88,12 @@ public class PlayerController : MonoBehaviour
 
        if(hasMoved)
        {
+           // Block movement if we've already moved this turn
+           if (m_Turns != null && !m_Turns.CanMoveThisTurn())
+           {
+               Debug.Log("Cannot move: already moved this turn.");
+               return;
+           }
            //check if the new position is passable, then move there if it is.
            CellData cellData = m_Board.GetCellData(newCellTarget);
 
@@ -88,8 +101,10 @@ public class PlayerController : MonoBehaviour
            {
                m_IsMoving = true;
                MoveTo(newCellTarget);
+               // Notify the turn system that this character just moved
+               m_Turns?.CharacterMoved();
                // Reset the moving flag after a short delay
-               Invoke(nameof(ResetMovingFlag), 0.1f);
+                Invoke(nameof(ResetMovingFlag), 0.1f);
            }
        }
    }
