@@ -23,7 +23,7 @@ public class PlayerController : MonoBehaviour
 
    private void Awake()
    {
-       m_Turns = FindObjectOfType<TurnManager>();
+       m_Turns = FindFirstObjectByType<TurnManager>();
        m_SpriteRenderer = GetComponent<SpriteRenderer>();
        ApplyRoleVisual();
    }
@@ -82,6 +82,11 @@ public class PlayerController : MonoBehaviour
    public PlayerRole GetRole()
    {
        return m_Role;
+   }
+   
+   public Vector2Int GetCellPosition()
+   {
+       return m_CellPosition;
    }
 
   

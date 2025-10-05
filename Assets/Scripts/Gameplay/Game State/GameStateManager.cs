@@ -1,4 +1,5 @@
 using UnityEngine;
+using System.Collections.Generic;
 
 public class GameStateManager : MonoBehaviour
 {
@@ -23,9 +24,12 @@ public class GameStateManager : MonoBehaviour
     [SerializeField]
     private int m_TreasureCount = 5;
     
-    [Header("Future: Obstacle Settings")]
+    [Header("Obstacle Settings")]
     [SerializeField]
-    private int m_ObstacleCount = 0; // For future obstacle randomization
+    private int m_ObstacleCount = 8;
+    
+    [SerializeField]
+    private bool m_UseRandomObstacles = true;
     
     private void Start()
     {
@@ -37,7 +41,15 @@ public class GameStateManager : MonoBehaviour
         // Initialize board first
         if (m_BoardManager != null)
         {
-            m_BoardManager.InitializeBoard();
+            if (m_UseRandomObstacles)
+            {
+                // Initialize board without obstacles first
+                m_BoardManager.InitializeBoardWithoutObstacles();
+            }
+            else
+            {
+                m_BoardManager.InitializeBoard();
+            }
         }
         
         // Initialize treasures first (so we can avoid spawning player on treasure)
@@ -59,8 +71,11 @@ public class GameStateManager : MonoBehaviour
             }
         }
         
-        // Future: Initialize obstacles
-        // InitializeObstacles();
+        // Initialize obstacles with collision avoidance
+        if (m_UseRandomObstacles)
+        {
+            InitializeObstacles();
+        }
         
         Debug.Log("Game initialization complete!");
     }
@@ -115,11 +130,38 @@ public class GameStateManager : MonoBehaviour
         return true;
     }
     
-    // Future method for obstacle initialization
     private void InitializeObstacles()
     {
-        // This will be implemented when you add random obstacle generation
-        Debug.Log("Obstacle initialization - to be implemented");
+        if (m_BoardManager == null)
+        {
+            Debug.LogWarning("BoardManager is null, cannot initialize obstacles");
+            return;
+        }
+        
+        // Collect positions to avoid (player and treasures)
+        List<Vector2Int> positionsToAvoid = new List<Vector2Int>();
+        
+        // Add player position
+        if (m_Player != null)
+        {
+            Vector2Int playerPos = m_Player.GetCellPosition();
+            positionsToAvoid.Add(playerPos);
+        }
+        
+        // Add treasure positions
+        if (m_TreasureManager != null)
+        {
+            List<Vector2Int> treasurePositions = m_TreasureManager.GetAllTreasurePositions();
+            positionsToAvoid.AddRange(treasurePositions);
+        }
+        
+        // Generate obstacles avoiding overlaps
+        m_BoardManager.AddObstaclesAvoidingOverlaps(positionsToAvoid, m_ObstacleCount);
+        
+        // Rebuild the board with the new obstacles
+        m_BoardManager.RebuildBoardWithObstacles();
+        
+        Debug.Log($"Initialized {m_ObstacleCount} obstacles avoiding {positionsToAvoid.Count} occupied positions");
     }
     
     // Public method to reinitialize game (useful for restart functionality)

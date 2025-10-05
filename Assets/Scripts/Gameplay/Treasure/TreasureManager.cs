@@ -126,4 +126,17 @@ public class TreasureManager : MonoBehaviour
             m_TreasurePrefab.SetActive(false);
         }
     }
+    
+    public List<Vector2Int> GetAllTreasurePositions()
+    {
+        List<Vector2Int> positions = new List<Vector2Int>();
+        foreach (TreasureController treasure in m_Treasures)
+        {
+            if (treasure != null)
+            {
+                positions.Add(treasure.GetCellPosition());
+            }
+        }
+        return positions;
+    }
 }
