@@ -42,13 +42,13 @@ public class MoveTracker : MonoBehaviour
         if (role == PlayerRole.Robber)
         {
             robberMoves.Add(move);
-            Debug.Log($"Recorded move: {role} moved {direction}. Total robber moves: {robberMoves.Count}");
         }
         else if (role == PlayerRole.Cop)
         {
             copMoves.Add(move);
-            Debug.Log($"Recorded move: {role} moved {direction}. Total cop moves: {copMoves.Count}");
         }
+        
+        Debug.Log($"{role} moved {direction}");
     }
     
     public void ClearMovesForRole(PlayerRole role)
@@ -78,23 +78,18 @@ public class MoveTracker : MonoBehaviour
     
     public void DisplayPreviousPlayerMoves(PlayerRole currentPlayerRole)
     {
-        // Get the UI text from TurnManager
         TurnManager turnManager = FindFirstObjectByType<TurnManager>();
         if (turnManager == null || turnManager.previousMovesText == null) 
         {
-            Debug.LogWarning("TurnManager or previousMovesText is null!");
             return;
         }
         
         PlayerRole previousRole = (currentPlayerRole == PlayerRole.Robber) ? PlayerRole.Cop : PlayerRole.Robber;
         List<PlayerMove> previousMoves = GetMovesForRole(previousRole);
         
-        Debug.Log($"Displaying moves for {previousRole}. Found {previousMoves.Count} moves.");
-        
         if (previousMoves.Count == 0)
         {
             turnManager.previousMovesText.text = "No previous moves";
-            Debug.Log("No previous moves found");
             return;
         }
         
@@ -109,7 +104,6 @@ public class MoveTracker : MonoBehaviour
         }
         
         turnManager.previousMovesText.text = movesText;
-        Debug.Log($"Updated UI text: {movesText}");
     }
     
     private string GetArrowForDirection(MoveDirection direction)
@@ -134,7 +128,6 @@ public class MoveTracker : MonoBehaviour
         robberMoves.Clear();
         copMoves.Clear();
         
-        // Clear UI text through TurnManager
         TurnManager turnManager = FindFirstObjectByType<TurnManager>();
         if (turnManager != null && turnManager.previousMovesText != null)
         {

@@ -228,10 +228,7 @@ public class GameSceneManager : MonoBehaviour
         var roots = active.GetRootGameObjects();
         foreach (GameObject root in roots)
         {
-            // Skip if already inactive
             if (!root.activeSelf) continue;
-            // Do not touch EventSystem-like global systems if you prefer; comment out next lines if needed
-            // if (root.GetComponent<UnityEngine.EventSystems.EventSystem>() != null) continue;
             m_DeactivatedRoots.Add(root);
             root.SetActive(false);
         }
@@ -255,16 +252,13 @@ public class GameSceneManager : MonoBehaviour
         Debug.Log("Manually fixing button interactivity...");
         EnsureUIInteractive();
         
-        // Additional button fixes
         Button[] allButtons = FindObjectsByType<Button>(FindObjectsSortMode.None);
         foreach (Button button in allButtons)
         {
-            // Force enable the button component
             button.enabled = true;
             button.interactable = true;
             button.gameObject.SetActive(true);
             
-            // Check if button has OnClick events
             if (button.onClick.GetPersistentEventCount() == 0)
             {
                 Debug.LogWarning($"Button '{button.name}' has no OnClick events assigned!");

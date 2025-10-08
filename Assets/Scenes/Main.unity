@@ -848,7 +848,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: a644ddfe6ac5b4d43a1b73ff6cd4cdb2, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::PlayerController
-  m_Role: 1
+  m_Role: 0
   copSprite: {fileID: 1254972078360548749, guid: b1e80ab4d367a6a4aae3b33cb36e5f54, type: 3}
   robberSprite: {fileID: 8121798745765309480, guid: 50c3b74de12e416499eeeb35429e5428, type: 3}
 --- !u!212 &1029871679
@@ -898,7 +898,7 @@ SpriteRenderer:
   m_SortingLayerID: 0
   m_SortingLayer: 0
   m_SortingOrder: 10
-  m_Sprite: {fileID: 8121798745765309480, guid: 50c3b74de12e416499eeeb35429e5428, type: 3}
+  m_Sprite: {fileID: 1254972078360548749, guid: b1e80ab4d367a6a4aae3b33cb36e5f54, type: 3}
   m_Color: {r: 1, g: 1, b: 1, a: 1}
   m_FlipX: 0
   m_FlipY: 0
@@ -1138,14 +1138,14 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 8afb681430e2b45f28b1592b695347bf, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::GameStateManager
-  m_BoardManager: {fileID: 1977335945}
-  m_Robber: {fileID: 1115229378}
-  m_Cop: {fileID: 1029871678}
-  m_TreasureManager: {fileID: 701692111}
-  m_PlayerStartPosition: {x: 1, y: 1}
-  m_TreasureCount: 5
-  m_ObstacleCount: 0
-  m_UseRandomObstacles: 1
+  boardManager: {fileID: 1977335945}
+  robber: {fileID: 1115229378}
+  cop: {fileID: 1029871678}
+  treasureManager: {fileID: 701692111}
+  playerStartPosition: {x: 1, y: 1}
+  treasureCount: 5
+  obstacleCount: 8
+  useRandomObstacles: 1
 --- !u!4 &1280623006
 Transform:
   m_ObjectHideFlags: 0
