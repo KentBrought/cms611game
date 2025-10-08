@@ -107,6 +107,30 @@ public class TreasureManager : MonoBehaviour
         }
     }
     
+    public int GetTotalTreasureCount()
+    {
+        return m_TreasureCount;
+    }
+    
+    public int GetCollectedTreasureCount()
+    {
+        int collected = 0;
+        foreach (TreasureController t in m_Treasures)
+        {
+            if (t != null && t.IsCollected()) collected++;
+        }
+        return collected;
+    }
+    
+    public bool AreAllTreasuresCollected()
+    {
+        foreach (TreasureController t in m_Treasures)
+        {
+            if (t != null && !t.IsCollected()) return false;
+        }
+        return m_Treasures.Count > 0; // true only if at least one treasure existed and all are collected
+    }
+    
     public bool HasTreasureAt(Vector2Int position)
     {
         foreach (TreasureController treasure in m_Treasures)

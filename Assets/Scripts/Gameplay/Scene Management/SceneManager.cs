@@ -10,16 +10,25 @@ public class GameSceneManager : MonoBehaviour
     private string m_TitleSceneName = "Title";
     
     [SerializeField]
-    private string m_HomeScreenSceneName = "HomeScreen";
+    private string m_HomeScreenSceneName = "Home";
     
     [SerializeField]
     private string m_MainGameSceneName = "Main";
     
+    [SerializeField]
+    private string m_WinSceneName = "Win";
+    
+    [SerializeField]
+    private string m_TransitionSceneName = "Transition";
+    
     [Header("Transition Settings")]
     [SerializeField]
-    private float m_TitleDisplayDuration = 2.0f;
+    private float m_TitleDisplayDuration = 4.0f; // increase default display time
+    
+    private bool m_TitleSequenceStarted = false;
     
     private static GameSceneManager s_Instance;
+    private readonly System.Collections.Generic.List<GameObject> m_DeactivatedRoots = new System.Collections.Generic.List<GameObject>();
     
     public static GameSceneManager Instance
     {
@@ -54,8 +63,12 @@ public class GameSceneManager : MonoBehaviour
     
     private void Start()
     {
-        // Auto-start the title sequence
-        StartTitleSequence();
+        // Auto-start the title sequence once
+        if (!m_TitleSequenceStarted)
+        {
+            m_TitleSequenceStarted = true;
+            StartTitleSequence();
+        }
     }
     
     public void StartTitleSequence()
@@ -90,6 +103,12 @@ public class GameSceneManager : MonoBehaviour
     public void LoadHomeScreen()
     {
         StartCoroutine(LoadScene(m_HomeScreenSceneName));
+    }
+    
+    public void LoadWinScreen(string winner = "")
+    {
+        // Optionally store winner somewhere global if a win UI needs it later
+        StartCoroutine(LoadScene(m_WinSceneName));
     }
     
     private IEnumerator LoadScene(string sceneName)
@@ -162,6 +181,72 @@ public class GameSceneManager : MonoBehaviour
         }
         
         Debug.Log("UI interactivity setup complete");
+    }
+    
+    public void LoadTransitionScreen()
+    {
+        StartCoroutine(LoadTransitionSceneAdditive(m_TransitionSceneName));
+    }
+    
+    public void ContinueToNextPlayer()
+    {
+        StartCoroutine(UnloadTransitionScene(m_TransitionSceneName));
+    }
+    
+    private IEnumerator LoadTransitionSceneAdditive(string sceneName)
+    {
+        DeactivateActiveSceneRoots();
+        if (!SceneManager.GetSceneByName(sceneName).isLoaded)
+        {
+            AsyncOperation asyncLoad = SceneManager.LoadSceneAsync(sceneName, LoadSceneMode.Additive);
+            while (!asyncLoad.isDone)
+            {
+                yield return null;
+            }
+        }
+        yield return null;
+    }
+    
+    private IEnumerator UnloadTransitionScene(string sceneName)
+    {
+        if (SceneManager.GetSceneByName(sceneName).isLoaded)
+        {
+            AsyncOperation asyncUnload = SceneManager.UnloadSceneAsync(sceneName);
+            while (!asyncUnload.isDone)
+            {
+                yield return null;
+            }
+        }
+        ReactivateActiveSceneRoots();
+        yield return null;
+    }
+
+    private void DeactivateActiveSceneRoots()
+    {
+        m_DeactivatedRoots.Clear();
+        Scene active = SceneManager.GetActiveScene();
+        var roots = active.GetRootGameObjects();
+        foreach (GameObject root in roots)
+        {
+            // Skip if already inactive
+            if (!root.activeSelf) continue;
+            // Do not touch EventSystem-like global systems if you prefer; comment out next lines if needed
+            // if (root.GetComponent<UnityEngine.EventSystems.EventSystem>() != null) continue;
+            m_DeactivatedRoots.Add(root);
+            root.SetActive(false);
+        }
+    }
+
+    private void ReactivateActiveSceneRoots()
+    {
+        foreach (GameObject go in m_DeactivatedRoots)
+        {
+            if (go != null)
+            {
+                go.SetActive(true);
+            }
+        }
+        m_DeactivatedRoots.Clear();
     }
     
     [ContextMenu("Force Fix Buttons")]

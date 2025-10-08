@@ -20,10 +20,12 @@ public class PlayerController : MonoBehaviour
    private int m_CollectedCoins = 0;  // Track collected coins
    
     private TurnManager m_Turns;   // cache the turn manager
+    private TreasureManager m_TreasureManager; // cache for win condition checks
 
    private void Awake()
    {
        m_Turns = FindFirstObjectByType<TurnManager>();
+       m_TreasureManager = FindFirstObjectByType<TreasureManager>();
        m_SpriteRenderer = GetComponent<SpriteRenderer>();
        ApplyRoleVisual();
    }
@@ -32,14 +34,24 @@ public class PlayerController : MonoBehaviour
    {
        m_Board = boardManager;
        
-       // Get role from RoleSelectionManager if available
-       if (RoleSelectionManager.Instance != null)
-       {
-           m_Role = RoleSelectionManager.Instance.GetPlayerRole();
-       }
+        ApplyRoleVisual();
+        MoveTo(cell);
+   }
+
+   public void SpawnWithRole(BoardManager boardManager, Vector2Int cell, PlayerRole role)
+   {
+       m_Board = boardManager;
+       m_Role = role;
        ApplyRoleVisual();
        MoveTo(cell);
    }
+
+   public void SetRole(PlayerRole role)
+   {
+       m_Role = role;
+       ApplyRoleVisual();
+   }
+
    private void ApplyRoleVisual()
    {
        if (m_SpriteRenderer == null) return;
@@ -76,6 +88,14 @@ public class PlayerController : MonoBehaviour
        if (m_Role == PlayerRole.Robber)
        {
            CheckForTreasureCollection();
+           CheckRobberWinCondition();
+       }
+       
+       // Notify GameStateManager of position change for win condition checks
+       GameStateManager gameState = FindFirstObjectByType<GameStateManager>();
+       if (gameState != null)
+       {
+           gameState.OnPlayerMoved(this);
        }
    }
 
@@ -94,6 +114,12 @@ public class PlayerController : MonoBehaviour
    {
        // Prevent multiple movements in the same frame
        if (m_IsMoving) return;
+        // Gate input by active role for pass-and-play
+       if (m_Turns != null)
+       {
+           TurnManager tm = m_Turns;
+           if (tm != null && tm.GetActiveRole() != m_Role) return;
+       }
 
        Vector2Int newCellTarget = m_CellPosition;
        bool hasMoved = false;
@@ -162,8 +188,20 @@ public class PlayerController : MonoBehaviour
                {
                    m_Turns.UpdateCoinDisplay(m_CollectedCoins);
                }
+               // After collection, re-check win condition
+               CheckRobberWinCondition();
            }
        }
    }
+
+   private void CheckRobberWinCondition()
+   {
+       if (m_TreasureManager != null && m_TreasureManager.AreAllTreasuresCollected())
+       {
+           Debug.Log("Robber wins: all treasure collected.");
+           GameSceneManager.Instance.LoadWinScreen("Robber");
+       }
+   }
+
 
 }

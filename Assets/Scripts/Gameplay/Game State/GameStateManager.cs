@@ -8,7 +8,9 @@ public class GameStateManager : MonoBehaviour
     private BoardManager m_BoardManager;
     
     [SerializeField]
-    private PlayerController m_Player;
+    private PlayerController m_Robber;
+    [SerializeField]
+    private PlayerController m_Cop;
     
     [SerializeField]
     private TreasureManager m_TreasureManager;
@@ -30,6 +32,9 @@ public class GameStateManager : MonoBehaviour
     
     [SerializeField]
     private bool m_UseRandomObstacles = true;
+    
+    [Header("Game State")]
+    private int m_CurrentRound = 1;
     
     private void Start()
     {
@@ -58,16 +63,23 @@ public class GameStateManager : MonoBehaviour
             m_TreasureManager.Initialize(m_BoardManager, m_TreasureCount);
         }
         
-        // Initialize player
-        if (m_Player != null && m_BoardManager != null)
+        // Initialize both players: Robber and Cop (pass-and-play)
+        if (m_BoardManager != null)
         {
-            Vector2Int playerPosition = m_UseRandomStartPosition ? GetRandomPlayerPosition() : m_PlayerStartPosition;
-            m_Player.Spawn(m_BoardManager, playerPosition);
-            
-            // Register player with treasure manager after spawning
-            if (m_TreasureManager != null)
+            // Robber
+            if (m_Robber != null)
             {
-                m_TreasureManager.RegisterPlayer(m_Player);
+                Vector2Int robberPos = GetRandomValidPositionAvoiding(Vector2Int.zero);
+                m_Robber.SpawnWithRole(m_BoardManager, robberPos, PlayerRole.Robber);
+                if (m_TreasureManager != null) m_TreasureManager.RegisterPlayer(m_Robber);
+            }
+            // Cop avoid robber start
+            if (m_Cop != null)
+            {
+                Vector2Int avoid = m_Robber != null ? m_Robber.GetCellPosition() : Vector2Int.zero;
+                Vector2Int copPos = GetRandomValidPositionAvoiding(avoid);
+                m_Cop.SpawnWithRole(m_BoardManager, copPos, PlayerRole.Cop);
+                if (m_TreasureManager != null) m_TreasureManager.RegisterPlayer(m_Cop);
             }
         }
         
@@ -77,21 +89,21 @@ public class GameStateManager : MonoBehaviour
             InitializeObstacles();
         }
         
+        // Set initial visibility: only show the active player (robber starts)
+        SetInitialPlayerVisibility();
+        
         Debug.Log("Game initialization complete!");
     }
     
-    private Vector2Int GetRandomPlayerPosition()
+    private Vector2Int GetRandomValidPositionAvoiding(Vector2Int avoid)
     {
         if (m_BoardManager == null)
         {
-            Debug.LogWarning("BoardManager is null, using fallback position");
             return m_PlayerStartPosition;
         }
-        
         Vector2Int position;
         int attempts = 0;
         const int maxAttempts = 100;
-        
         do
         {
             position = new Vector2Int(
@@ -100,16 +112,9 @@ public class GameStateManager : MonoBehaviour
             );
             attempts++;
         }
-        while (attempts < maxAttempts && !IsValidPlayerPosition(position));
-        
-        if (attempts >= maxAttempts)
-        {
-            Debug.LogWarning("Could not find valid random position, using fallback");
-            return m_PlayerStartPosition;
-        }
-        
-        Debug.Log($"Player spawned at random position: {position}");
-        return position;
+        while (attempts < maxAttempts && (
+            !IsValidPlayerPosition(position) || (avoid != Vector2Int.zero && position == avoid)));
+        return attempts >= maxAttempts ? m_PlayerStartPosition : position;
     }
     
     private bool IsValidPlayerPosition(Vector2Int position)
@@ -141,11 +146,14 @@ public class GameStateManager : MonoBehaviour
         // Collect positions to avoid (player and treasures)
         List<Vector2Int> positionsToAvoid = new List<Vector2Int>();
         
-        // Add player position
-        if (m_Player != null)
+        // Add players' positions (robber and cop) if available
+        if (m_Robber != null)
         {
-            Vector2Int playerPos = m_Player.GetCellPosition();
-            positionsToAvoid.Add(playerPos);
+            positionsToAvoid.Add(m_Robber.GetCellPosition());
+        }
+        if (m_Cop != null)
+        {
+            positionsToAvoid.Add(m_Cop.GetCellPosition());
         }
         
         // Add treasure positions
@@ -168,5 +176,56 @@ public class GameStateManager : MonoBehaviour
     public void RestartGame()
     {
         InitializeGame();
+    }
+
+    private void SetInitialPlayerVisibility()
+    {
+        // Hide cop initially, show robber (robber starts first)
+        if (m_Cop != null)
+        {
+            var copRenderer = m_Cop.GetComponent<SpriteRenderer>();
+            if (copRenderer != null) copRenderer.enabled = false;
+        }
+        if (m_Robber != null)
+        {
+            var robberRenderer = m_Robber.GetComponent<SpriteRenderer>();
+            if (robberRenderer != null) robberRenderer.enabled = true;
+        }
+    }
+    
+    public void OnPlayerMoved(PlayerController player)
+    {
+        // Check for cop catching robber
+        if (player.GetRole() == PlayerRole.Cop && m_Robber != null)
+        {
+            if (m_Robber.GetCellPosition() == player.GetCellPosition())
+            {
+                Debug.Log("Cop wins: robber caught!");
+                GameSceneManager.Instance.LoadWinScreen("Cop");
+                return;
+            }
+        }
+        
+        // Check for robber collecting all treasure
+        if (player.GetRole() == PlayerRole.Robber && m_TreasureManager != null)
+        {
+            if (m_TreasureManager.AreAllTreasuresCollected())
+            {
+                Debug.Log("Robber wins: all treasure collected!");
+                GameSceneManager.Instance.LoadWinScreen("Robber");
+                return;
+            }
+        }
+    }
+    
+    public int GetCurrentRound()
+    {
+        return m_CurrentRound;
+    }
+    
+    public void IncrementRound()
+    {
+        m_CurrentRound++;
+        Debug.Log($"Round {m_CurrentRound} started");
     }
 }
