@@ -6,6 +6,7 @@ public class TurnManager : MonoBehaviour
     public Text turnCounterText; 
     public Text coinCounterText;  // New UI text for coin display
     public Text movementStepsText;  // New UI text for movement steps display
+    public Text previousMovesText;  // New UI text for displaying previous player moves
     public Button nextTurnButton; 
     private int turnCount = 1;
     private int currentMovementSteps = 0;
@@ -24,6 +25,16 @@ public class TurnManager : MonoBehaviour
     public bool CanMoveThisTurn()
     {
         return currentMovementSteps < maxMovementSteps;
+    }
+    
+    public int GetCurrentMovementSteps()
+    {
+        return currentMovementSteps;
+    }
+    
+    public int GetMaxMovementSteps()
+    {
+        return maxMovementSteps;
     }
 
     public void CharacterMoved()
@@ -59,6 +70,8 @@ public class TurnManager : MonoBehaviour
         Debug.Log($"Next turn started. Movement steps available: {maxMovementSteps}");
         // Switch active role for pass-and-play
         activeRole = (activeRole == PlayerRole.Robber) ? PlayerRole.Cop : PlayerRole.Robber;
+        // Display previous player's moves
+        DisplayPreviousPlayerMoves();
         // Toggle visibility to only show active player
         ToggleActivePlayerVisibility();
         // Notify GameStateManager of round increment
@@ -114,7 +127,7 @@ public class TurnManager : MonoBehaviour
 
     private void ToggleActivePlayerVisibility()
     {
-        PlayerController[] players = FindObjectsOfType<PlayerController>();
+        PlayerController[] players = FindObjectsByType<PlayerController>(FindObjectsSortMode.None);
         foreach (PlayerController p in players)
         {
             var sr = p.GetComponent<SpriteRenderer>();
@@ -122,6 +135,19 @@ public class TurnManager : MonoBehaviour
             {
                 sr.enabled = (p.GetRole() == activeRole);
             }
+        }
+    }
+    
+    private void DisplayPreviousPlayerMoves()
+    {
+        if (MoveTracker.Instance != null)
+        {
+            // Display the previous player's moves
+            MoveTracker.Instance.DisplayPreviousPlayerMoves(activeRole);
+            
+            // Clear the previous player's moves after displaying them
+            PlayerRole previousRole = (activeRole == PlayerRole.Robber) ? PlayerRole.Cop : PlayerRole.Robber;
+            MoveTracker.Instance.ClearMovesForRole(previousRole);
         }
     }
 }

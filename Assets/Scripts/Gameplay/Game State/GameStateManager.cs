@@ -17,9 +17,6 @@ public class GameStateManager : MonoBehaviour
     
     [Header("Player Settings")]
     [SerializeField]
-    private bool m_UseRandomStartPosition = true;
-    
-    [SerializeField]
     private Vector2Int m_PlayerStartPosition = new Vector2Int(1, 1); // Fallback if random fails
     
     [Header("Treasure Settings")]
@@ -39,6 +36,7 @@ public class GameStateManager : MonoBehaviour
     private void Start()
     {
         InitializeGame();
+        InitializeMoveTracker();
     }
     
     private void InitializeGame()
@@ -227,5 +225,16 @@ public class GameStateManager : MonoBehaviour
     {
         m_CurrentRound++;
         Debug.Log($"Round {m_CurrentRound} started");
+    }
+    
+    private void InitializeMoveTracker()
+    {
+        // Ensure MoveTracker exists in the scene
+        if (MoveTracker.Instance == null)
+        {
+            GameObject moveTrackerObj = new GameObject("MoveTracker");
+            moveTrackerObj.AddComponent<MoveTracker>();
+            Debug.Log("Created MoveTracker instance");
+        }
     }
 }

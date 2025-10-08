@@ -158,6 +158,28 @@ public class PlayerController : MonoBehaviour
 
            if(cellData != null && cellData.Passable)
            {
+               // Check if cop would end up on treasure on their LAST move (prevent this)
+               if (m_Role == PlayerRole.Cop && m_TreasureManager != null)
+               {
+                   // Check if this would be the cop's last move of the turn
+                   // This move would use up their remaining steps
+                   bool isLastMove = (m_Turns != null && m_Turns.CanMoveThisTurn() && 
+                                     m_Turns.GetCurrentMovementSteps() + 1 >= m_Turns.GetMaxMovementSteps());
+                   
+                   if (isLastMove && m_TreasureManager.HasTreasureAt(newCellTarget))
+                   {
+                       Debug.Log("Cop cannot end their turn on a treasure!");
+                       return;
+                   }
+               }
+               
+               // Record the move before moving
+               MoveDirection moveDirection = GetMoveDirection(m_CellPosition, newCellTarget);
+               if (MoveTracker.Instance != null)
+               {
+                   MoveTracker.Instance.RecordMove(m_Role, moveDirection);
+               }
+               
                m_IsMoving = true;
                MoveTo(newCellTarget);
                // Notify the turn system that this character just moved
@@ -171,6 +193,18 @@ public class PlayerController : MonoBehaviour
    private void ResetMovingFlag()
    {
        m_IsMoving = false;
+   }
+   
+   private MoveDirection GetMoveDirection(Vector2Int from, Vector2Int to)
+   {
+       Vector2Int difference = to - from;
+       
+       if (difference.x > 0) return MoveDirection.Right;
+       if (difference.x < 0) return MoveDirection.Left;
+       if (difference.y > 0) return MoveDirection.Up;
+       if (difference.y < 0) return MoveDirection.Down;
+       
+       return MoveDirection.Right; // Default fallback
    }
 
    private void CheckForTreasureCollection()
