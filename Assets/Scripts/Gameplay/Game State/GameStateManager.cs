@@ -170,7 +170,6 @@ public class GameStateManager : MonoBehaviour
         Debug.Log($"Added {obstacleCount} obstacles");
     }
     
-    // Public method to reinitialize game (useful for restart functionality)
     public void RestartGame()
     {
         InitializeGame();
@@ -194,11 +193,17 @@ public class GameStateManager : MonoBehaviour
     {
         if (player.GetRole() == PlayerRole.Cop && robber != null)
         {
-            if (robber.GetCellPosition() == player.GetCellPosition())
+            // Only check for cop catching robber on the cop's last move of the turn
+            TurnManager turnManager = FindFirstObjectByType<TurnManager>();
+            if (turnManager != null)
             {
-                Debug.Log("Cop caught the robber!");
-                GameSceneManager.Instance.LoadWinScreen("Cop");
-                return;
+                bool isLastMove = turnManager.GetCurrentMovementSteps() + 1 >= turnManager.GetMaxMovementSteps();
+                
+                if (isLastMove && robber.GetCellPosition() == player.GetCellPosition())
+                {
+                    GameSceneManager.Instance.LoadWinScreen("Cop Wins!\nThe robber was caught!");
+                    return;
+                }
             }
         }
         
@@ -206,8 +211,11 @@ public class GameStateManager : MonoBehaviour
         {
             if (treasureManager.AreAllTreasuresCollected())
             {
-                Debug.Log("Robber got all the treasure!");
-                GameSceneManager.Instance.LoadWinScreen("Robber");
+                GameSceneManager.Instance.LoadWinScreen("Robber Wins!\nAll treasure collected!");
+                return;
+            } else if (player.GetCellPosition() == cop.GetCellPosition())
+            {
+                GameSceneManager.Instance.LoadWinScreen("Cop Wins!\nThe robber ran into the cop!");
                 return;
             }
         }

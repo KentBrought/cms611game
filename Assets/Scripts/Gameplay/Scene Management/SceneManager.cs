@@ -105,9 +105,9 @@ public class GameSceneManager : MonoBehaviour
         StartCoroutine(LoadScene(m_HomeScreenSceneName));
     }
     
-    public void LoadWinScreen(string winner = "")
+    public void LoadWinScreen(string winMessage = "Congrats! You've won.")
     {
-        // Optionally store winner somewhere global if a win UI needs it later
+        WinScreenManager.SetWinMessage(winMessage);
         StartCoroutine(LoadScene(m_WinSceneName));
     }
     

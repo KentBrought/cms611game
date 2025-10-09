@@ -65,6 +65,7 @@ public class TurnManager : MonoBehaviour
         activeRole = (activeRole == PlayerRole.Robber) ? PlayerRole.Cop : PlayerRole.Robber;
         DisplayPreviousPlayerMoves();
         ToggleActivePlayerVisibility();
+        UpdateTreasureVisibility();
         
         GameStateManager gameState = FindFirstObjectByType<GameStateManager>();
         if (gameState != null)
@@ -107,6 +108,7 @@ public class TurnManager : MonoBehaviour
     
     public void ContinueAfterTransition()
     {
+        UpdateTreasureVisibility();
         GameSceneManager.Instance.ContinueToNextPlayer();
     }
 
@@ -136,6 +138,18 @@ public class TurnManager : MonoBehaviour
             
             PlayerRole previousRole = (activeRole == PlayerRole.Robber) ? PlayerRole.Cop : PlayerRole.Robber;
             MoveTracker.Instance.ClearMovesForRole(previousRole);
+        }
+    }
+    
+    private void UpdateTreasureVisibility()
+    {
+        TreasureController[] treasures = FindObjectsByType<TreasureController>(FindObjectsSortMode.None);
+        foreach (TreasureController treasure in treasures)
+        {
+            if (treasure != null)
+            {
+                treasure.UpdateVisibilityForCurrentTurn();
+            }
         }
     }
 }

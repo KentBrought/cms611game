@@ -84,6 +84,8 @@ public class PlayerController : MonoBehaviour
        cellPosition = cell;
        transform.position = board.CellToWorld(cellPosition);
        
+       Debug.Log($"Player with role {role} moved to position {cellPosition}");
+       
        if (role == PlayerRole.Robber)
        {
            CheckForTreasureCollection();
@@ -202,13 +204,17 @@ public class PlayerController : MonoBehaviour
 
    private void CheckForTreasureCollection()
    {
+       Debug.Log($"Robber checking for treasure collection at position {cellPosition}");
        foreach (TreasureController treasure in treasures)
        {
            if (treasure != null && !treasure.IsCollected() && treasure.GetCellPosition() == cellPosition)
            {
                treasure.Collect();
                collectedCoins++;
-               Debug.Log("Treasure collected! Total coins: " + collectedCoins);
+               Debug.Log("Treasure collected by robber! Total coins: " + collectedCoins);
+               
+               // Update visibility for all treasures after collection
+               UpdateAllTreasureVisibility();
                
                if (turns != null)
                {
@@ -219,12 +225,25 @@ public class PlayerController : MonoBehaviour
        }
    }
 
+   private void UpdateAllTreasureVisibility()
+   {
+       TreasureController[] allTreasures = FindObjectsByType<TreasureController>(FindObjectsSortMode.None);
+       foreach (TreasureController treasure in allTreasures)
+       {
+           if (treasure != null)
+           {
+               treasure.UpdateVisibilityForCurrentTurn();
+           }
+       }
+   }
+
+
    private void CheckRobberWinCondition()
    {
        if (treasureManager != null && treasureManager.AreAllTreasuresCollected())
        {
            Debug.Log("Robber wins!");
-           GameSceneManager.Instance.LoadWinScreen("Robber");
+           GameSceneManager.Instance.LoadWinScreen("Robber Wins!\nAll treasure collected!");
        }
    }
 
