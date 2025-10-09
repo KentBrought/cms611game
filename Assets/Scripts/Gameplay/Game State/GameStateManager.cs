@@ -5,124 +5,134 @@ public class GameStateManager : MonoBehaviour
 {
     [Header("Game Components")]
     [SerializeField]
-    private BoardManager m_BoardManager;
+    private BoardManager boardManager;
     
     [SerializeField]
-    private PlayerController m_Player;
+    private PlayerController robber;
+    [SerializeField]
+    private PlayerController cop;
     
     [SerializeField]
-    private TreasureManager m_TreasureManager;
+    private TreasureManager treasureManager;
     
     [Header("Player Settings")]
     [SerializeField]
-    private bool m_UseRandomStartPosition = true;
-    
-    [SerializeField]
-    private Vector2Int m_PlayerStartPosition = new Vector2Int(1, 1); // Fallback if random fails
+    private Vector2Int playerStartPosition = new Vector2Int(1, 1);
     
     [Header("Treasure Settings")]
     [SerializeField]
-    private int m_TreasureCount = 5;
+    private int treasureCount = 5;
     
     [Header("Obstacle Settings")]
     [SerializeField]
-    private int m_ObstacleCount = 8;
+    private int obstacleCount = 8;
     
     [SerializeField]
-    private bool m_UseRandomObstacles = true;
+    private bool useRandomObstacles = true;
+    
+    [Header("Game State")]
+    private int currentRound = 1;
     
     private void Start()
     {
         InitializeGame();
+        InitializeMoveTracker();
     }
     
     private void InitializeGame()
     {
-        // Initialize board first
-        if (m_BoardManager != null)
-        {
-            if (m_UseRandomObstacles)
-            {
-                // Initialize board without obstacles first
-                m_BoardManager.InitializeBoardWithoutObstacles();
-            }
-            else
-            {
-                m_BoardManager.InitializeBoard();
-            }
-        }
+        SetupBoard();
+        SetupTreasures();
+        SetupPlayers();
+        SetupObstacles();
+        SetInitialPlayerVisibility();
         
-        // Initialize treasures first (so we can avoid spawning player on treasure)
-        if (m_TreasureManager != null && m_BoardManager != null)
-        {
-            m_TreasureManager.Initialize(m_BoardManager, m_TreasureCount);
-        }
-        
-        // Initialize player
-        if (m_Player != null && m_BoardManager != null)
-        {
-            Vector2Int playerPosition = m_UseRandomStartPosition ? GetRandomPlayerPosition() : m_PlayerStartPosition;
-            m_Player.Spawn(m_BoardManager, playerPosition);
-            
-            // Register player with treasure manager after spawning
-            if (m_TreasureManager != null)
-            {
-                m_TreasureManager.RegisterPlayer(m_Player);
-            }
-        }
-        
-        // Initialize obstacles with collision avoidance
-        if (m_UseRandomObstacles)
-        {
-            InitializeObstacles();
-        }
-        
-        Debug.Log("Game initialization complete!");
+        Debug.Log("Game ready!");
     }
     
-    private Vector2Int GetRandomPlayerPosition()
+    private void SetupBoard()
     {
-        if (m_BoardManager == null)
+        if (boardManager == null) return;
+        
+        if (useRandomObstacles)
         {
-            Debug.LogWarning("BoardManager is null, using fallback position");
-            return m_PlayerStartPosition;
+            boardManager.InitializeBoardWithoutObstacles();
+        }
+        else
+        {
+            boardManager.InitializeBoard();
+        }
+    }
+    
+    private void SetupTreasures()
+    {
+        if (treasureManager != null && boardManager != null)
+        {
+            treasureManager.Initialize(boardManager, treasureCount);
+        }
+    }
+    
+    private void SetupPlayers()
+    {
+        if (boardManager == null) return;
+        
+        // Spawn robber first
+        if (robber != null)
+        {
+            Vector2Int robberPos = GetRandomValidPositionAvoiding(Vector2Int.zero);
+            robber.SpawnWithRole(boardManager, robberPos, PlayerRole.Robber);
+            if (treasureManager != null) treasureManager.RegisterPlayer(robber);
         }
         
-        Vector2Int position;
-        int attempts = 0;
-        const int maxAttempts = 100;
-        
-        do
+        // Spawn cop away from robber
+        if (cop != null)
         {
-            position = new Vector2Int(
-                Random.Range(1, m_BoardManager.Width - 1),
-                Random.Range(1, m_BoardManager.Height - 1)
+            Vector2Int avoidPos = robber != null ? robber.GetCellPosition() : Vector2Int.zero;
+            Vector2Int copPos = GetRandomValidPositionAvoiding(avoidPos);
+            cop.SpawnWithRole(boardManager, copPos, PlayerRole.Cop);
+            if (treasureManager != null) treasureManager.RegisterPlayer(cop);
+        }
+    }
+    
+    private void SetupObstacles()
+    {
+        if (!useRandomObstacles) return;
+        
+        InitializeObstacles();
+    }
+    
+    private Vector2Int GetRandomValidPositionAvoiding(Vector2Int avoid)
+    {
+        if (boardManager == null)
+        {
+            return playerStartPosition;
+        }
+        
+        for (int i = 0; i < 100; i++)
+        {
+            Vector2Int pos = new Vector2Int(
+                Random.Range(1, boardManager.Width - 1),
+                Random.Range(1, boardManager.Height - 1)
             );
-            attempts++;
-        }
-        while (attempts < maxAttempts && !IsValidPlayerPosition(position));
-        
-        if (attempts >= maxAttempts)
-        {
-            Debug.LogWarning("Could not find valid random position, using fallback");
-            return m_PlayerStartPosition;
+            
+            if (IsValidPlayerPosition(pos) && pos != avoid)
+            {
+                return pos;
+            }
         }
         
-        Debug.Log($"Player spawned at random position: {position}");
-        return position;
+        return playerStartPosition;
     }
     
     private bool IsValidPlayerPosition(Vector2Int position)
     {
-        // Check if position is passable
-        CellData cellData = m_BoardManager.GetCellData(position);
+        CellData cellData = boardManager.GetCellData(position);
         if (cellData == null || !cellData.Passable)
         {
             return false;
         }
         
-        // Check if position is not occupied by treasure
-        if (m_TreasureManager != null && m_TreasureManager.HasTreasureAt(position))
+        if (treasureManager != null && treasureManager.HasTreasureAt(position))
         {
             return false;
         }
@@ -132,41 +142,94 @@ public class GameStateManager : MonoBehaviour
     
     private void InitializeObstacles()
     {
-        if (m_BoardManager == null)
+        if (boardManager == null)
         {
             Debug.LogWarning("BoardManager is null, cannot initialize obstacles");
             return;
         }
         
-        // Collect positions to avoid (player and treasures)
-        List<Vector2Int> positionsToAvoid = new List<Vector2Int>();
+        List<Vector2Int> occupiedPositions = new List<Vector2Int>();
         
-        // Add player position
-        if (m_Player != null)
+        if (robber != null)
         {
-            Vector2Int playerPos = m_Player.GetCellPosition();
-            positionsToAvoid.Add(playerPos);
+            occupiedPositions.Add(robber.GetCellPosition());
+        }
+        if (cop != null)
+        {
+            occupiedPositions.Add(cop.GetCellPosition());
         }
         
-        // Add treasure positions
-        if (m_TreasureManager != null)
+        if (treasureManager != null)
         {
-            List<Vector2Int> treasurePositions = m_TreasureManager.GetAllTreasurePositions();
-            positionsToAvoid.AddRange(treasurePositions);
+            occupiedPositions.AddRange(treasureManager.GetAllTreasurePositions());
         }
         
-        // Generate obstacles avoiding overlaps
-        m_BoardManager.AddObstaclesAvoidingOverlaps(positionsToAvoid, m_ObstacleCount);
+        boardManager.AddObstaclesAvoidingOverlaps(occupiedPositions, obstacleCount);
+        boardManager.RebuildBoardWithObstacles();
         
-        // Rebuild the board with the new obstacles
-        m_BoardManager.RebuildBoardWithObstacles();
-        
-        Debug.Log($"Initialized {m_ObstacleCount} obstacles avoiding {positionsToAvoid.Count} occupied positions");
+        Debug.Log($"Added {obstacleCount} obstacles");
     }
     
     // Public method to reinitialize game (useful for restart functionality)
     public void RestartGame()
     {
         InitializeGame();
+    }
+
+    private void SetInitialPlayerVisibility()
+    {
+        if (cop != null)
+        {
+            var copRenderer = cop.GetComponent<SpriteRenderer>();
+            if (copRenderer != null) copRenderer.enabled = false;
+        }
+        if (robber != null)
+        {
+            var robberRenderer = robber.GetComponent<SpriteRenderer>();
+            if (robberRenderer != null) robberRenderer.enabled = true;
+        }
+    }
+    
+    public void OnPlayerMoved(PlayerController player)
+    {
+        if (player.GetRole() == PlayerRole.Cop && robber != null)
+        {
+            if (robber.GetCellPosition() == player.GetCellPosition())
+            {
+                Debug.Log("Cop caught the robber!");
+                GameSceneManager.Instance.LoadWinScreen("Cop");
+                return;
+            }
+        }
+        
+        if (player.GetRole() == PlayerRole.Robber && treasureManager != null)
+        {
+            if (treasureManager.AreAllTreasuresCollected())
+            {
+                Debug.Log("Robber got all the treasure!");
+                GameSceneManager.Instance.LoadWinScreen("Robber");
+                return;
+            }
+        }
+    }
+    
+    public int GetCurrentRound()
+    {
+        return currentRound;
+    }
+    
+    public void IncrementRound()
+    {
+        currentRound++;
+        Debug.Log($"Round {currentRound} started");
+    }
+    
+    private void InitializeMoveTracker()
+    {
+        if (MoveTracker.Instance == null)
+        {
+            GameObject moveTrackerObj = new GameObject("MoveTracker");
+            moveTrackerObj.AddComponent<MoveTracker>();
+        }
     }
 }

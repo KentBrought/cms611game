@@ -5,97 +5,119 @@ using System.Collections.Generic;
 public class PlayerController : MonoBehaviour
 {
    [SerializeField]
-   private PlayerRole m_Role = PlayerRole.Robber;
+   private PlayerRole role = PlayerRole.Robber;
 
    [Header("Avatar Sprites")]
    [SerializeField] private Sprite copSprite;
    [SerializeField] private Sprite robberSprite;
 
-   private SpriteRenderer m_SpriteRenderer;
+   private SpriteRenderer spriteRenderer;
 
-   private BoardManager m_Board;
-   private Vector2Int m_CellPosition;
-   private bool m_IsMoving = false;
-   private List<TreasureController> m_Treasures = new List<TreasureController>();
-   private int m_CollectedCoins = 0;  // Track collected coins
+   private BoardManager board;
+   private Vector2Int cellPosition;
+   private bool isMoving = false;
+   private List<TreasureController> treasures = new List<TreasureController>();
+   private int collectedCoins = 0;
    
-    private TurnManager m_Turns;   // cache the turn manager
+    private TurnManager turns;
+    private TreasureManager treasureManager;
 
    private void Awake()
    {
-       m_Turns = FindFirstObjectByType<TurnManager>();
-       m_SpriteRenderer = GetComponent<SpriteRenderer>();
+       turns = FindFirstObjectByType<TurnManager>();
+       treasureManager = FindFirstObjectByType<TreasureManager>();
+       spriteRenderer = GetComponent<SpriteRenderer>();
        ApplyRoleVisual();
    }
 
    public void Spawn(BoardManager boardManager, Vector2Int cell)
    {
-       m_Board = boardManager;
+       board = boardManager;
        
-       // Get role from RoleSelectionManager if available
-       if (RoleSelectionManager.Instance != null)
-       {
-           m_Role = RoleSelectionManager.Instance.GetPlayerRole();
-       }
+        ApplyRoleVisual();
+        MoveTo(cell);
+   }
+
+   public void SpawnWithRole(BoardManager boardManager, Vector2Int cell, PlayerRole newRole)
+   {
+       board = boardManager;
+       role = newRole;
        ApplyRoleVisual();
        MoveTo(cell);
    }
+
+   public void SetRole(PlayerRole newRole)
+   {
+       role = newRole;
+       ApplyRoleVisual();
+   }
+
    private void ApplyRoleVisual()
    {
-       if (m_SpriteRenderer == null) return;
-       m_SpriteRenderer.sprite = (m_Role == PlayerRole.Cop) ? copSprite : robberSprite;
+       if (spriteRenderer == null) return;
+       spriteRenderer.sprite = (role == PlayerRole.Cop) ? copSprite : robberSprite;
    }
 
 #if UNITY_EDITOR
    private void OnValidate()
    {
-       if (m_SpriteRenderer == null) m_SpriteRenderer = GetComponent<SpriteRenderer>();
+       if (spriteRenderer == null) spriteRenderer = GetComponent<SpriteRenderer>();
        ApplyRoleVisual();
    }
 #endif
 
    public void RegisterTreasure(TreasureController treasure)
    {
-       if (!m_Treasures.Contains(treasure))
+       if (!treasures.Contains(treasure))
        {
-           m_Treasures.Add(treasure);
+           treasures.Add(treasure);
        }
    }
    
    public int GetCollectedCoins()
    {
-       return m_CollectedCoins;
+       return collectedCoins;
    }
   
    public void MoveTo(Vector2Int cell)
    {
-       m_CellPosition = cell;
-       transform.position = m_Board.CellToWorld(m_CellPosition);
+       cellPosition = cell;
+       transform.position = board.CellToWorld(cellPosition);
        
-       // Check for treasure collection if player is a robber
-       if (m_Role == PlayerRole.Robber)
+       if (role == PlayerRole.Robber)
        {
            CheckForTreasureCollection();
+           CheckRobberWinCondition();
+       }
+       
+       GameStateManager gameState = FindFirstObjectByType<GameStateManager>();
+       if (gameState != null)
+       {
+           gameState.OnPlayerMoved(this);
        }
    }
 
    public PlayerRole GetRole()
    {
-       return m_Role;
+       return role;
    }
    
    public Vector2Int GetCellPosition()
    {
-       return m_CellPosition;
+       return cellPosition;
    }
 
   
    private void Update()
    {
-       // Prevent multiple movements in the same frame
-       if (m_IsMoving) return;
+       if (isMoving) return;
+       
+       if (turns != null)
+       {
+           if (turns.GetActiveRole() != role) return;
+       }
 
-       Vector2Int newCellTarget = m_CellPosition;
+       Vector2Int newCellTarget = cellPosition;
        bool hasMoved = false;
 
        if(Keyboard.current.upArrowKey.wasPressedThisFrame)
@@ -121,49 +143,90 @@ public class PlayerController : MonoBehaviour
 
        if(hasMoved)
        {
-           // Block movement if we've already moved this turn
-           if (m_Turns != null && !m_Turns.CanMoveThisTurn())
+           if (turns != null && !turns.CanMoveThisTurn())
            {
-               Debug.Log("Cannot move: already moved this turn.");
                return;
            }
-           //check if the new position is passable, then move there if it is.
-           CellData cellData = m_Board.GetCellData(newCellTarget);
+           
+           if (board == null)
+           {
+               Debug.LogWarning("Board is null, cannot move.");
+               return;
+           }
+           
+           CellData cellData = board.GetCellData(newCellTarget);
 
            if(cellData != null && cellData.Passable)
            {
-               m_IsMoving = true;
+               if (role == PlayerRole.Cop && treasureManager != null)
+               {
+                   bool isLastMove = (turns != null && turns.CanMoveThisTurn() && 
+                                     turns.GetCurrentMovementSteps() + 1 >= turns.GetMaxMovementSteps());
+                   
+                   if (isLastMove && treasureManager.HasTreasureAt(newCellTarget))
+                   {
+                       return;
+                   }
+               }
+               
+               MoveDirection moveDirection = GetMoveDirection(cellPosition, newCellTarget);
+               if (MoveTracker.Instance != null)
+               {
+                   MoveTracker.Instance.RecordMove(role, moveDirection);
+               }
+               
+               isMoving = true;
                MoveTo(newCellTarget);
-               // Notify the turn system that this character just moved
-               m_Turns?.CharacterMoved();
-               // Reset the moving flag after a short delay
-                Invoke(nameof(ResetMovingFlag), 0.1f);
+               turns?.CharacterMoved();
+               Invoke(nameof(ResetMovingFlag), 0.1f);
            }
        }
    }
 
    private void ResetMovingFlag()
    {
-       m_IsMoving = false;
+       isMoving = false;
+   }
+   
+   private MoveDirection GetMoveDirection(Vector2Int from, Vector2Int to)
+   {
+       Vector2Int difference = to - from;
+       
+       if (difference.x > 0) return MoveDirection.Right;
+       if (difference.x < 0) return MoveDirection.Left;
+       if (difference.y > 0) return MoveDirection.Up;
+       if (difference.y < 0) return MoveDirection.Down;
+       
+       return MoveDirection.Right; // Default fallback
    }
 
    private void CheckForTreasureCollection()
    {
-       foreach (TreasureController treasure in m_Treasures)
+       foreach (TreasureController treasure in treasures)
        {
-           if (treasure != null && !treasure.IsCollected() && treasure.GetCellPosition() == m_CellPosition)
+           if (treasure != null && !treasure.IsCollected() && treasure.GetCellPosition() == cellPosition)
            {
                treasure.Collect();
-               m_CollectedCoins++;
-               Debug.Log("Treasure collected by robber! Total coins: " + m_CollectedCoins);
+               collectedCoins++;
+               Debug.Log("Treasure collected! Total coins: " + collectedCoins);
                
-               // Notify TurnManager to update UI
-               if (m_Turns != null)
+               if (turns != null)
                {
-                   m_Turns.UpdateCoinDisplay(m_CollectedCoins);
+                   turns.UpdateCoinDisplay(collectedCoins);
                }
+               CheckRobberWinCondition();
            }
        }
    }
+
+   private void CheckRobberWinCondition()
+   {
+       if (treasureManager != null && treasureManager.AreAllTreasuresCollected())
+       {
+           Debug.Log("Robber wins!");
+           GameSceneManager.Instance.LoadWinScreen("Robber");
+       }
+   }
+
 
 }

@@ -4,24 +4,37 @@ using UnityEngine.UI;
 public class TurnManager : MonoBehaviour
 {
     public Text turnCounterText; 
-    public Text coinCounterText;  // New UI text for coin display
-    public Text movementStepsText;  // New UI text for movement steps display
+    public Text coinCounterText;
+    public Text movementStepsText;
+    public Text previousMovesText;
     public Button nextTurnButton; 
     private int turnCount = 1;
     private int currentMovementSteps = 0;
     private int maxMovementSteps = 0;
+    private PlayerRole activeRole = PlayerRole.Robber;
 
     void Start()
     {
         UpdateTurnCounter();
-        UpdateCoinDisplay(0);  // Initialize coin display
-        GenerateNewMovementSteps();  // Generate initial movement steps
+        UpdateCoinDisplay(0);
+        GenerateNewMovementSteps();
+        if (nextTurnButton != null) nextTurnButton.interactable = false;
         nextTurnButton.onClick.AddListener(NextTurn);
     }
 
     public bool CanMoveThisTurn()
     {
         return currentMovementSteps < maxMovementSteps;
+    }
+    
+    public int GetCurrentMovementSteps()
+    {
+        return currentMovementSteps;
+    }
+    
+    public int GetMaxMovementSteps()
+    {
+        return maxMovementSteps;
     }
 
     public void CharacterMoved()
@@ -30,25 +43,42 @@ public class TurnManager : MonoBehaviour
         {
             currentMovementSteps++;
             UpdateMovementStepsDisplay();
-            Debug.Log($"Character moved this turn. Steps used: {currentMovementSteps}/{maxMovementSteps}");
-        }
-        else
-        {
-            Debug.Log("Character has used all movement steps this turn.");
+            
+            if (currentMovementSteps >= maxMovementSteps && nextTurnButton != null)
+            {
+                nextTurnButton.interactable = true;
+            }
         }
     }
 
     private void NextTurn()
     {
+        if (currentMovementSteps < maxMovementSteps)
+        {
+            return;
+        }
+        
         turnCount++;
         GenerateNewMovementSteps();
         UpdateTurnCounter();
-        Debug.Log($"Next turn started. Movement steps available: {maxMovementSteps}");
+        
+        activeRole = (activeRole == PlayerRole.Robber) ? PlayerRole.Cop : PlayerRole.Robber;
+        DisplayPreviousPlayerMoves();
+        ToggleActivePlayerVisibility();
+        
+        GameStateManager gameState = FindFirstObjectByType<GameStateManager>();
+        if (gameState != null)
+        {
+            gameState.IncrementRound();
+        }
+        
+        GameSceneManager.Instance.LoadTransitionScreen();
+        if (nextTurnButton != null) nextTurnButton.interactable = false;
     }
 
     private void UpdateTurnCounter()
     {
-        turnCounterText.text = "Turn: " + turnCount;
+        turnCounterText.text = "Round: " + (turnCount/2 + 1);
     }
     
     public void UpdateCoinDisplay(int coinCount)
@@ -61,9 +91,10 @@ public class TurnManager : MonoBehaviour
     
     private void GenerateNewMovementSteps()
     {
-        maxMovementSteps = Random.Range(1, 5); // Random number between 1-4 (inclusive)
+        maxMovementSteps = Random.Range(1, 5);
         currentMovementSteps = 0;
         UpdateMovementStepsDisplay();
+        if (nextTurnButton != null) nextTurnButton.interactable = false;
     }
     
     private void UpdateMovementStepsDisplay()
@@ -71,6 +102,40 @@ public class TurnManager : MonoBehaviour
         if (movementStepsText != null)
         {
             movementStepsText.text = $"Steps: {currentMovementSteps}/{maxMovementSteps}";
+        }
+    }
+    
+    public void ContinueAfterTransition()
+    {
+        GameSceneManager.Instance.ContinueToNextPlayer();
+    }
+
+    public PlayerRole GetActiveRole()
+    {
+        return activeRole;
+    }
+
+    private void ToggleActivePlayerVisibility()
+    {
+        PlayerController[] players = FindObjectsByType<PlayerController>(FindObjectsSortMode.None);
+        foreach (PlayerController p in players)
+        {
+            var sr = p.GetComponent<SpriteRenderer>();
+            if (sr != null)
+            {
+                sr.enabled = (p.GetRole() == activeRole);
+            }
+        }
+    }
+    
+    private void DisplayPreviousPlayerMoves()
+    {
+        if (MoveTracker.Instance != null)
+        {
+            MoveTracker.Instance.DisplayPreviousPlayerMoves(activeRole);
+            
+            PlayerRole previousRole = (activeRole == PlayerRole.Robber) ? PlayerRole.Cop : PlayerRole.Robber;
+            MoveTracker.Instance.ClearMovesForRole(previousRole);
         }
     }
 }
