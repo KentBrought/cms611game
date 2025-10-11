@@ -1,6 +1,9 @@
 using UnityEngine;
 using UnityEngine.Tilemaps;
 using System.Collections.Generic;
+#if UNITY_EDITOR
+using UnityEditor;
+#endif
 
 public class CellData
 {
@@ -266,4 +269,39 @@ public class BoardManager : MonoBehaviour
             }
         }
     }
+
+#if UNITY_EDITOR
+    [ContextMenu("Initialize Board for Debug")]
+    private void InitializeBoardForDebug()
+    {
+        InitializeBoardWithoutObstacles();
+        
+        UnityEditor.SceneView.RepaintAll();
+        UnityEditor.EditorUtility.SetDirty(this);
+    }
+    
+    [ContextMenu("Initialize Board with Obstacles for Debug")]
+    private void InitializeBoardWithObstaclesForDebug()
+    {
+        InitializeBoard();
+        
+        UnityEditor.SceneView.RepaintAll();
+        UnityEditor.EditorUtility.SetDirty(this);
+    }
+    
+    [ContextMenu("Clear Board")]
+    private void ClearBoard()
+    {
+        m_Tilemap = GetComponentInChildren<Tilemap>();
+        if (m_Tilemap != null)
+        {
+            m_Tilemap.ClearAllTiles();
+            UnityEditor.SceneView.RepaintAll();
+        }
+        else
+        {
+            Debug.LogError("Tilemap component not found.");
+        }
+    }
+#endif
 }
