@@ -404,7 +404,7 @@ Camera:
   m_Enabled: 1
   serializedVersion: 2
   m_ClearFlags: 1
-  m_BackGroundColor: {r: 0, g: 0, b: 0, a: 0}
+  m_BackGroundColor: {r: 0.259, g: 0.275, b: 0.286, a: 1}
   m_projectionMatrixMode: 1
   m_GateFitMode: 2
   m_FOVAxisMode: 0
@@ -1609,14 +1609,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::BoardManager
   Width: 12
   Height: 12
-  GroundTiles:
-  - {fileID: 11400000, guid: 7af3255e2618f47a2b1f272d0fbb25c5, type: 2}
-  - {fileID: 11400000, guid: 322b2f857fb204d37b07cd3196d9ccce, type: 2}
-  - {fileID: 11400000, guid: e561146f07e524bb998db5a6a92462cd, type: 2}
-  - {fileID: 11400000, guid: 7af3255e2618f47a2b1f272d0fbb25c5, type: 2}
-  - {fileID: 11400000, guid: 6eed92066105f4329b4b5ce3df867323, type: 2}
-  WallTiles:
-  - {fileID: 11400000, guid: 4659d28d64e2c4dd5ae92d35c5b9858c, type: 2}
+  RoadTile: {fileID: 11400000, guid: b61109907b92487f986db32662bc98ce, type: 2}
+  RoofTile: {fileID: 11400000, guid: ba51e0a5555e438186abab1b20cabfc3, type: 2}
   m_ObstacleCount: 8
   m_UseRandomObstacles: 1
   Player: {fileID: 1115229378}

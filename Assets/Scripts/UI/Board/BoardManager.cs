@@ -17,8 +17,8 @@ public class BoardManager : MonoBehaviour
 
     public int Width;
     public int Height;
-    public Tile[] GroundTiles;
-    public Tile[] WallTiles;
+    public Tile RoadTile;
+    public Tile RoofTile;
     private Grid m_Grid;
 
     [Header("Obstacle Settings")]
@@ -70,16 +70,24 @@ public class BoardManager : MonoBehaviour
                 
                 if(isWall || isObstacle)
                 {
-                    tile = WallTiles[Random.Range(0, WallTiles.Length)];
+                    tile = RoofTile;
                     m_BoardData[x, y].Passable = false;
+                    
+                    // Apply random rotation to rooftiles
+                    Vector3Int position = new Vector3Int(x, y, 0);
+                    m_Tilemap.SetTile(position, tile);
+                    
+                    Matrix4x4 transform = Matrix4x4.TRS(Vector3.zero, 
+                        Quaternion.Euler(0, 0, Random.Range(0, 4) * 90), 
+                        Vector3.one);
+                    m_Tilemap.SetTransformMatrix(position, transform);
                 }
                 else
                 {
-                    tile = GroundTiles[Random.Range(0, GroundTiles.Length)];
+                    tile = RoadTile;
                     m_BoardData[x, y].Passable = true;
+                    m_Tilemap.SetTile(new Vector3Int(x, y, 0), tile);
                 }
-
-                m_Tilemap.SetTile(new Vector3Int(x, y, 0), tile);
             }
         }
     }
@@ -224,16 +232,24 @@ public class BoardManager : MonoBehaviour
                 
                 if(isWall)
                 {
-                    tile = WallTiles[Random.Range(0, WallTiles.Length)];
+                    tile = RoofTile;
                     m_BoardData[x, y].Passable = false;
+                    
+                    // Apply random rotation to rooftiles
+                    Vector3Int position = new Vector3Int(x, y, 0);
+                    m_Tilemap.SetTile(position, tile);
+                    
+                    Matrix4x4 transform = Matrix4x4.TRS(Vector3.zero, 
+                        Quaternion.Euler(0, 0, Random.Range(0, 4) * 90), 
+                        Vector3.one);
+                    m_Tilemap.SetTransformMatrix(position, transform);
                 }
                 else
                 {
-                    tile = GroundTiles[Random.Range(0, GroundTiles.Length)];
+                    tile = RoadTile;
                     m_BoardData[x, y].Passable = true;
+                    m_Tilemap.SetTile(new Vector3Int(x, y, 0), tile);
                 }
-
-                m_Tilemap.SetTile(new Vector3Int(x, y, 0), tile);
             }
         }
     }
@@ -256,13 +272,21 @@ public class BoardManager : MonoBehaviour
                 
                 if(isWall || isObstacle)
                 {
-                    Tile tile = WallTiles[Random.Range(0, WallTiles.Length)];
+                    Tile tile = RoofTile;
                     m_BoardData[x, y].Passable = false;
-                    m_Tilemap.SetTile(new Vector3Int(x, y, 0), tile);
+                    
+                    // Apply random rotation to rooftiles
+                    Vector3Int position = new Vector3Int(x, y, 0);
+                    m_Tilemap.SetTile(position, tile);
+                    
+                    Matrix4x4 transform = Matrix4x4.TRS(Vector3.zero, 
+                        Quaternion.Euler(0, 0, Random.Range(0, 4) * 90), 
+                        Vector3.one);
+                    m_Tilemap.SetTransformMatrix(position, transform);
                 }
                 else
                 {
-                    Tile tile = GroundTiles[Random.Range(0, GroundTiles.Length)];
+                    Tile tile = RoadTile;
                     m_BoardData[x, y].Passable = true;
                     m_Tilemap.SetTile(new Vector3Int(x, y, 0), tile);
                 }
