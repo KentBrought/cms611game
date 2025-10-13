@@ -14,6 +14,8 @@ public class GameStateManager : MonoBehaviour
     
     [SerializeField]
     private TreasureManager treasureManager;
+
+    private SirenManager sirenManager;
     
     [Header("Indicator Settings")]
     [SerializeField]
