@@ -26,7 +26,7 @@ public class BoardManager : MonoBehaviour
     [SerializeField]
     private int m_ObstacleCount = 4; // Variable value in the future - kira
 
-    private List<Vector2Int> m_Obstacles = new List<List<Vector2Int>>(); // check syntax
+    private List<List<Vector2Int>> m_Obstacles = new List<List<Vector2Int>>(); // check syntax
 
     [System.Serializable]
     public class PatternAttributes
@@ -248,7 +248,7 @@ public class BoardManager : MonoBehaviour
         return false;
     }
 
-    public void SetObstacles(List<Vector2Int> obstacles)
+    public void SetObstacles(List<List<Vector2Int>> obstacles)
     {
         m_Obstacles = new List<List<Vector2Int>>(obstacles);
     }
@@ -445,6 +445,7 @@ public class BoardManager : MonoBehaviour
                 variants.Add(Mirror(baseRot));
             }
         }
+        return variants;
     }
 
     private static Vector2Int[] RotateOffsets(List<Vector2Int> src, int deg)
@@ -548,7 +549,7 @@ public class BoardManager : MonoBehaviour
                 if (visited.Contains(n)) continue;
                 foreach (var pattern in m_Obstacles)
                 {
-                    if (m_Obstacles.Contains(n)) continue; // blocked
+                    if (pattern.Contains(n)) continue; // blocked
                 }
                 visited.Add(n);
                 q.Enqueue(n);

@@ -242,7 +242,7 @@ public class GameStateManager : MonoBehaviour
             var copRenderer = cop.GetComponent<SpriteRenderer>();
             if (copRenderer) copRenderer.enabled = false;
         }
-        if (robberl)
+        if (robber)
         {
             var robberRenderer = robber.GetComponent<SpriteRenderer>();
             if (robberRenderer) robberRenderer.enabled = true;
