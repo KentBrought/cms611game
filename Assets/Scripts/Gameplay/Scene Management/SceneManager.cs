@@ -63,11 +63,11 @@ public class GameSceneManager : MonoBehaviour
     
     private void Start()
     {
-        // Auto-start the title sequence once
+        // Skip title sequence and go directly to home screen
         if (!m_TitleSequenceStarted)
         {
             m_TitleSequenceStarted = true;
-            StartTitleSequence();
+            LoadHomeScreen();
         }
     }
     
