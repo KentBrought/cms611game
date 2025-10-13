@@ -555,7 +555,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 5f7201a12d95ffc409449d95f23cf332, type: 3}
   m_Name: 
   m_EditorClassIdentifier: UnityEngine.UI::UnityEngine.UI.Text
-  m_Material: {fileID: 0}
+  m_Material: {fileID: 2100000, guid: a1b2c3d4e5f6789012345678901234ab, type: 3}
   m_Color: {r: 1, g: 1, b: 1, a: 1}
   m_RaycastTarget: 1
   m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
@@ -564,7 +564,7 @@ MonoBehaviour:
     m_PersistentCalls:
       m_Calls: []
   m_FontData:
-    m_Font: {fileID: 10102, guid: 0000000000000000e000000000000000, type: 0}
+    m_Font: {fileID: 12800000, guid: a1b2c3d4e5f6789012345678901234ab, type: 3}
     m_FontSize: 24
     m_FontStyle: 1
     m_BestFit: 0
@@ -848,7 +848,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: a644ddfe6ac5b4d43a1b73ff6cd4cdb2, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::PlayerController
-  m_Role: 0
+  role: 1
   copSprite: {fileID: 1254972078360548749, guid: b1e80ab4d367a6a4aae3b33cb36e5f54, type: 3}
   robberSprite: {fileID: 8121798745765309480, guid: 50c3b74de12e416499eeeb35429e5428, type: 3}
 --- !u!212 &1029871679
@@ -898,7 +898,7 @@ SpriteRenderer:
   m_SortingLayerID: 0
   m_SortingLayer: 0
   m_SortingOrder: 10
-  m_Sprite: {fileID: 1254972078360548749, guid: b1e80ab4d367a6a4aae3b33cb36e5f54, type: 3}
+  m_Sprite: {fileID: 8121798745765309480, guid: 50c3b74de12e416499eeeb35429e5428, type: 3}
   m_Color: {r: 1, g: 1, b: 1, a: 1}
   m_FlipX: 0
   m_FlipY: 0
@@ -1033,7 +1033,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: a644ddfe6ac5b4d43a1b73ff6cd4cdb2, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::PlayerController
-  m_Role: 1
+  role: 1
   copSprite: {fileID: 1254972078360548749, guid: b1e80ab4d367a6a4aae3b33cb36e5f54, type: 3}
   robberSprite: {fileID: 8121798745765309480, guid: 50c3b74de12e416499eeeb35429e5428, type: 3}
 --- !u!212 &1115229379
