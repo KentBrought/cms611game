@@ -51,6 +51,23 @@ public class MoveTracker : MonoBehaviour
         Debug.Log($"{role} moved {direction}");
     }
     
+    public void RecordFakeMove(PlayerRole role, MoveDirection fakeDirection)
+    {
+        PlayerMove move = new PlayerMove(role, fakeDirection);
+        move.isFakeMove = true;
+        
+        if (role == PlayerRole.Robber)
+        {
+            robberMoves.Add(move);
+        }
+        else if (role == PlayerRole.Cop)
+        {
+            copMoves.Add(move);
+        }
+        
+        Debug.Log($"{role} fake moved {fakeDirection}");
+    }
+    
     public void ClearMovesForRole(PlayerRole role)
     {
         if (role == PlayerRole.Robber)
@@ -96,7 +113,9 @@ public class MoveTracker : MonoBehaviour
         string movesText = $"{previousRole} moves: ";
         for (int i = 0; i < previousMoves.Count; i++)
         {
-            movesText += GetArrowForDirection(previousMoves[i].direction);
+            string arrow = GetArrowForDirection(previousMoves[i].direction);
+            // Fake moves are now displayed without parentheses
+            movesText += arrow;
             if (i < previousMoves.Count - 1)
             {
                 movesText += " ";
@@ -141,11 +160,13 @@ public class PlayerMove
 {
     public PlayerRole role;
     public MoveDirection direction;
+    public bool isFakeMove;
     
     public PlayerMove(PlayerRole role, MoveDirection direction)
     {
         this.role = role;
         this.direction = direction;
+        this.isFakeMove = false;
     }
 }
 

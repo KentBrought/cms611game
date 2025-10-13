@@ -174,7 +174,29 @@ public class PlayerController : MonoBehaviour
                MoveDirection moveDirection = GetMoveDirection(cellPosition, newCellTarget);
                if (MoveTracker.Instance != null)
                {
-                   MoveTracker.Instance.RecordMove(role, moveDirection);
+                   // Check if this is a robber with an active lie
+                   if (role == PlayerRole.Robber)
+                   {
+                       // Check lie system
+                       SimpleLieSystem simpleLieSystem = FindFirstObjectByType<SimpleLieSystem>();
+                       
+                       if (simpleLieSystem != null && simpleLieSystem.HasActiveLie())
+                       {
+                           // Record the fake move instead of the actual move
+                           simpleLieSystem.ConsumeActiveLie();
+                           Debug.Log("Robber used a lie - recorded fake move instead of actual move");
+                       }
+                       else
+                       {
+                           // Record normal move
+                           MoveTracker.Instance.RecordMove(role, moveDirection);
+                       }
+                   }
+                   else
+                   {
+                       // Record normal move for cop
+                       MoveTracker.Instance.RecordMove(role, moveDirection);
+                   }
                }
                
                isMoving = true;
