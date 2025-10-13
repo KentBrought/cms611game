@@ -59,7 +59,7 @@ public class GameStateManager : MonoBehaviour
     
     private void SetupBoard()
     {
-        if (boardManager == null) return;
+        if (!boardManager) return;
         
         if (useRandomObstacles)
         {
@@ -73,7 +73,7 @@ public class GameStateManager : MonoBehaviour
     
     private void SetupTreasures()
     {
-        if (treasureManager != null && boardManager != null)
+        if (treasureManager && boardManager)
         {
             treasureManager.Initialize(boardManager, treasureCount);
         }
@@ -81,23 +81,23 @@ public class GameStateManager : MonoBehaviour
     
     private void SetupPlayers()
     {
-        if (boardManager == null) return;
+        if (!boardManager) return;
         
         // Spawn robber first
-        if (robber != null)
+        if (robber)
         {
             Vector2Int robberPos = GetRandomValidPositionAvoiding(Vector2Int.zero);
             robber.SpawnWithRole(boardManager, robberPos, PlayerRole.Robber);
-            if (treasureManager != null) treasureManager.RegisterPlayer(robber);
+            if (treasureManager) treasureManager.RegisterPlayer(robber);
         }
         
         // Spawn cop away from robber
-        if (cop != null)
+        if (cop)
         {
-            Vector2Int avoidPos = robber != null ? robber.GetCellPosition() : Vector2Int.zero;
+            Vector2Int avoidPos = robber ? robber.GetCellPosition() : Vector2Int.zero;
             Vector2Int copPos = GetRandomValidPositionAvoiding(avoidPos);
             cop.SpawnWithRole(boardManager, copPos, PlayerRole.Cop);
-            if (treasureManager != null) treasureManager.RegisterPlayer(cop);
+            if (treasureManager) treasureManager.RegisterPlayer(cop);
         }
         
         // Setup indicators after players are spawned
@@ -106,10 +106,10 @@ public class GameStateManager : MonoBehaviour
     
     private void SetupIndicators()
     {
-        if (boardManager == null) return;
+        if (!boardManager) return;
         
         // Create robber indicator (starts at cop's position)
-        if (robber != null && cop != null)
+        if (robber && cop)
         {
             GameObject robberIndicatorObj = CreateIndicatorObject("RobberIndicator");
             robberIndicator = robberIndicatorObj.GetComponent<PlayerIndicatorController>();
@@ -117,7 +117,7 @@ public class GameStateManager : MonoBehaviour
         }
         
         // Create cop indicator (starts at robber's position)
-        if (cop != null && robber != null)
+        if (cop && robber)
         {
             GameObject copIndicatorObj = CreateIndicatorObject("CopIndicator");
             copIndicator = copIndicatorObj.GetComponent<PlayerIndicatorController>();
@@ -126,7 +126,7 @@ public class GameStateManager : MonoBehaviour
         
         // Set initial indicator visibility after indicators are created
         TurnManager turnManager = FindFirstObjectByType<TurnManager>();
-        if (turnManager != null)
+        if (turnManager)
         {
             turnManager.InitializeIndicatorVisibility();
         }
@@ -141,7 +141,7 @@ public class GameStateManager : MonoBehaviour
         
         // Add SpriteRenderer
         SpriteRenderer spriteRenderer = indicatorObj.AddComponent<SpriteRenderer>();
-        if (indicatorSprite != null)
+        if (indicatorSprite)
         {
             spriteRenderer.sprite = indicatorSprite;
         }
@@ -163,7 +163,7 @@ public class GameStateManager : MonoBehaviour
     
     private Vector2Int GetRandomValidPositionAvoiding(Vector2Int avoid)
     {
-        if (boardManager == null)
+        if (!boardManager)
         {
             return playerStartPosition;
         }
@@ -187,12 +187,12 @@ public class GameStateManager : MonoBehaviour
     private bool IsValidPlayerPosition(Vector2Int position)
     {
         CellData cellData = boardManager.GetCellData(position);
-        if (cellData == null || !cellData.Passable)
+        if (!cellData || !cellData.Passable)
         {
             return false;
         }
         
-        if (treasureManager != null && treasureManager.HasTreasureAt(position))
+        if (treasureManager && treasureManager.HasTreasureAt(position))
         {
             return false;
         }
@@ -202,7 +202,7 @@ public class GameStateManager : MonoBehaviour
     
     private void InitializeObstacles()
     {
-        if (boardManager == null)
+        if (!boardManager)
         {
             Debug.LogWarning("BoardManager is null, cannot initialize obstacles");
             return;
@@ -210,21 +210,21 @@ public class GameStateManager : MonoBehaviour
         
         List<Vector2Int> occupiedPositions = new List<Vector2Int>();
         
-        if (robber != null)
+        if (robber)
         {
             occupiedPositions.Add(robber.GetCellPosition());
         }
-        if (cop != null)
+        if (cop)
         {
             occupiedPositions.Add(cop.GetCellPosition());
         }
         
-        if (treasureManager != null)
+        if (treasureManager)
         {
             occupiedPositions.AddRange(treasureManager.GetAllTreasurePositions());
         }
         
-        boardManager.AddObstaclesAvoidingOverlaps(occupiedPositions, obstacleCount);
+        boardManager.AddPatternObstaclesAvoidingOverlaps(occupiedPositions, obstacleCount);
         boardManager.RebuildBoardWithObstacles();
         
         Debug.Log($"Added {obstacleCount} obstacles");
@@ -237,25 +237,25 @@ public class GameStateManager : MonoBehaviour
 
     private void SetInitialPlayerVisibility()
     {
-        if (cop != null)
+        if (cop)
         {
             var copRenderer = cop.GetComponent<SpriteRenderer>();
-            if (copRenderer != null) copRenderer.enabled = false;
+            if (copRenderer) copRenderer.enabled = false;
         }
-        if (robber != null)
+        if (robberl)
         {
             var robberRenderer = robber.GetComponent<SpriteRenderer>();
-            if (robberRenderer != null) robberRenderer.enabled = true;
+            if (robberRenderer) robberRenderer.enabled = true;
         }
     }
     
     public void OnPlayerMoved(PlayerController player)
     {
-        if (player.GetRole() == PlayerRole.Cop && robber != null)
+        if (player.GetRole() == PlayerRole.Cop && robber)
         {
             // Only check for cop catching robber on the cop's last move of the turn
             TurnManager turnManager = FindFirstObjectByType<TurnManager>();
-            if (turnManager != null)
+            if (turnManager)
             {
                 bool isLastMove = turnManager.GetCurrentMovementSteps() + 1 >= turnManager.GetMaxMovementSteps();
                 
@@ -267,7 +267,7 @@ public class GameStateManager : MonoBehaviour
             }
         }
         
-        if (player.GetRole() == PlayerRole.Robber && treasureManager != null)
+        if (player.GetRole() == PlayerRole.Robber && treasureManager)
         {
             if (treasureManager.AreAllTreasuresCollected())
             {
@@ -294,7 +294,7 @@ public class GameStateManager : MonoBehaviour
     
     private void InitializeMoveTracker()
     {
-        if (MoveTracker.Instance == null)
+        if (!MoveTracker.Instance)
         {
             GameObject moveTrackerObj = new GameObject("MoveTracker");
             moveTrackerObj.AddComponent<MoveTracker>();
@@ -309,6 +309,6 @@ public class GameStateManager : MonoBehaviour
     public Vector2Int GetIndicatorPosition(PlayerRole role)
     {
         PlayerIndicatorController indicator = GetIndicatorForRole(role);
-        return indicator != null ? indicator.GetCellPosition() : Vector2Int.zero;
+        return indicator ? indicator.GetCellPosition() : Vector2Int.zero;
     }
 }

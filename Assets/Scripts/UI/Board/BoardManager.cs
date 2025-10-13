@@ -1,6 +1,7 @@
 using UnityEngine;
 using UnityEngine.Tilemaps;
 using System.Collections.Generic;
+using System.Linq; // (Distinct/Any helpers)
 #if UNITY_EDITOR
 using UnityEditor;
 #endif
@@ -23,9 +24,9 @@ public class BoardManager : MonoBehaviour
 
     [Header("Obstacle Settings")]
     [SerializeField]
-    private int m_ObstacleCount = 8; // Variable value in the future - kira
+    private int m_ObstacleCount = 4; // Variable value in the future - kira
 
-    private List<Vector2Int> m_Obstacles = new List<Vector2Int>();
+    private List<Vector2Int> m_Obstacles = new List<List<Vector2Int>>(); // check syntax
 
     [System.Serializable]
     public class PatternAttributes
@@ -33,7 +34,7 @@ public class BoardManager : MonoBehaviour
         public string Name;
         public bool CanMirror;
         public List<int> CanRotate;           // degrees allowed (e.g., 0,90,180,270)
-        public List<Vector2Int> Offsets;      // relative cells (must include (0,0))
+        public List<Vector2Int> Offsets;      // relative cells (should include (0,0))
 
         public PatternAttributes(string name, bool mirror, List<int> rotate, List<Vector2Int> offsets)
         {
@@ -44,8 +45,7 @@ public class BoardManager : MonoBehaviour
         }
     };
 
-    // Creating all basic pattern types
-    // Size 2 obstacle types
+    // Basic pattern types
     public PatternAttributes line2 = new PatternAttributes(
         "line2",
         false,
@@ -53,7 +53,6 @@ public class BoardManager : MonoBehaviour
         new List<Vector2Int> { new Vector2Int(0, 0), new Vector2Int(1, 0) }
     );
 
-    // Size 3 obstacle types
     public PatternAttributes line3 = new PatternAttributes(
         "line3",
         false,
@@ -67,7 +66,6 @@ public class BoardManager : MonoBehaviour
 
     public PatternAttributes corner = new PatternAttributes(
         "corner",
-        // You can mirror corners to get all orientations, but rotations already cover it.
         false,
         new List<int> { 0, 90, 180, 270 },
         new List<Vector2Int> {
@@ -77,7 +75,6 @@ public class BoardManager : MonoBehaviour
         }
     );
 
-    // Size 4 obstacle types
     public PatternAttributes line4 = new PatternAttributes(
         "line4",
         false,
@@ -116,11 +113,9 @@ public class BoardManager : MonoBehaviour
 
     public PatternAttributes snake = new PatternAttributes(
         "snake",
-        true, // mirroring does produce distinct variants here
+        true, // mirroring produces distinct variants here
         new List<int> { 0, 90 },
         new List<Vector2Int> {
-            // shape:
-            // (0,0) (1,0) (1,1) (2,1)
             new Vector2Int(0, 0),
             new Vector2Int(1, 0),
             new Vector2Int(1, 1),
@@ -133,8 +128,6 @@ public class BoardManager : MonoBehaviour
         false,
         new List<int> { 0, 90, 180, 270 },
         new List<Vector2Int> {
-            // shape:
-            // (-1,0) (0,0) (1,0) (0,1)
             new Vector2Int(-1, 0),
             new Vector2Int(0, 0),
             new Vector2Int(1, 0),
@@ -143,13 +136,14 @@ public class BoardManager : MonoBehaviour
     );
 
     [Header("Pattern Obstacle Settings")]
-    [SerializeField] private bool m_UseObstacles = false;
-    [SerializeField] private int m_PatternCount = 4; // variable value in future - kira
-
+    [SerializeField] private bool m_UseObstacles = true;
     [SerializeField] private List<PatternAttributes> m_Patterns = new List<PatternAttributes>
     {
-        // seed some defaults? extend in Inspector too?
+        // You can populate in Inspector; we also auto-seed if empty.
     };
+
+    // ensure we keep board connected when placing patterns
+    [SerializeField] private bool m_RequireFullConnectivity = true;
 
     private static readonly Vector2Int[] kDirs = new[]
     {
@@ -163,11 +157,10 @@ public class BoardManager : MonoBehaviour
         return m_Grid.GetCellCenterWorld((Vector3Int)cellIndex);
     }
 
-    // Start is called before the first frame update
     void Start()
     {
         // Board initialization is now handled by GameStateManager
-        // This ensures proper order: board -> treasures -> player -> obstacles
+        // Order: board -> treasures -> player -> obstacles
     }
 
     public void InitializeBoard()
@@ -179,7 +172,7 @@ public class BoardManager : MonoBehaviour
 
         if (m_UseObstacles)
         {
-            AddPatternObstaclesAvoidingOverlaps(null, m_PatternCount);
+            AddPatternObstaclesAvoidingOverlaps(null, m_ObstacleCount); // changed
         }
 
         for (int y = 0; y < Height; ++y)
@@ -189,7 +182,6 @@ public class BoardManager : MonoBehaviour
                 Tile tile;
                 m_BoardData[x, y] = new CellData();
 
-                // Check if this position is a wall (border) or obstacle
                 bool isWall = (x == 0 || y == 0 || x == Width - 1 || y == Height - 1);
                 bool isObstacle = m_Obstacles.Contains(new Vector2Int(x, y));
 
@@ -197,14 +189,15 @@ public class BoardManager : MonoBehaviour
                 {
                     tile = RoofTile;
                     m_BoardData[x, y].Passable = false;
-                    
-                    // Apply random rotation to rooftiles
+
                     Vector3Int position = new Vector3Int(x, y, 0);
                     m_Tilemap.SetTile(position, tile);
-                    
-                    Matrix4x4 transform = Matrix4x4.TRS(Vector3.zero, 
-                        Quaternion.Euler(0, 0, Random.Range(0, 4) * 90), 
-                        Vector3.one);
+
+                    Matrix4x4 transform = Matrix4x4.TRS(
+                        Vector3.zero,
+                        Quaternion.Euler(0, 0, Random.Range(0, 4) * 90),
+                        Vector3.one
+                    );
                     m_Tilemap.SetTransformMatrix(position, transform);
                 }
                 else
@@ -224,7 +217,6 @@ public class BoardManager : MonoBehaviour
         {
             return null;
         }
-
         return m_BoardData[cellIndex.x, cellIndex.y];
     }
 
@@ -241,7 +233,6 @@ public class BoardManager : MonoBehaviour
                 Random.Range(1, Height - 1)
             );
             attempts++;
-            // loop until position is NOT invalid (i.e., empty & not border)
         } while (attempts < maxAttempts && IsObstaclePositionInvalid(position));
 
         return attempts >= maxAttempts ? Vector2Int.zero : position;
@@ -249,25 +240,17 @@ public class BoardManager : MonoBehaviour
 
     private bool IsObstaclePositionInvalid(Vector2Int position)
     {
-        // Check if position is already an obstacle
-        if (m_Obstacles.Contains(position))
-        {
-            return true;
-        }
+        if (m_Obstacles.Contains(position)) return true;
 
-        // Check if position is on the border (walls)
         if (position.x == 0 || position.y == 0 || position.x == Width - 1 || position.y == Height - 1)
-        {
             return true;
-        }
 
         return false;
     }
 
-    // Method to set obstacles from external sources (for collision avoidance)
     public void SetObstacles(List<Vector2Int> obstacles)
     {
-        m_Obstacles = new List<Vector2Int>(obstacles);
+        m_Obstacles = new List<List<Vector2Int>>(obstacles);
     }
 
     public void InitializeBoardWithoutObstacles()
@@ -276,7 +259,7 @@ public class BoardManager : MonoBehaviour
         m_Grid = GetComponentInChildren<Grid>();
 
         m_BoardData = new CellData[Width, Height];
-        m_Obstacles.Clear(); // Clear obstacles for now
+        m_Obstacles.Clear();
 
         for (int y = 0; y < Height; ++y)
         {
@@ -285,21 +268,21 @@ public class BoardManager : MonoBehaviour
                 Tile tile;
                 m_BoardData[x, y] = new CellData();
 
-                // Check if this position is a wall (border)
                 bool isWall = x == 0 || y == 0 || x == Width - 1 || y == Height - 1;
 
                 if (isWall)
                 {
                     tile = RoofTile;
                     m_BoardData[x, y].Passable = false;
-                    
-                    // Apply random rotation to rooftiles
+
                     Vector3Int position = new Vector3Int(x, y, 0);
                     m_Tilemap.SetTile(position, tile);
-                    
-                    Matrix4x4 transform = Matrix4x4.TRS(Vector3.zero, 
-                        Quaternion.Euler(0, 0, Random.Range(0, 4) * 90), 
-                        Vector3.one);
+
+                    Matrix4x4 transform = Matrix4x4.TRS(
+                        Vector3.zero,
+                        Quaternion.Euler(0, 0, Random.Range(0, 4) * 90),
+                        Vector3.one
+                    );
                     m_Tilemap.SetTransformMatrix(position, transform);
                 }
                 else
@@ -320,7 +303,6 @@ public class BoardManager : MonoBehaviour
             return;
         }
 
-        // Update board data with obstacles
         for (int y = 0; y < Height; ++y)
         {
             for (int x = 0; x < Width; ++x)
@@ -332,14 +314,15 @@ public class BoardManager : MonoBehaviour
                 {
                     Tile tile = RoofTile;
                     m_BoardData[x, y].Passable = false;
-                    
-                    // Apply random rotation to rooftiles
+
                     Vector3Int position = new Vector3Int(x, y, 0);
                     m_Tilemap.SetTile(position, tile);
-                    
-                    Matrix4x4 transform = Matrix4x4.TRS(Vector3.zero, 
-                        Quaternion.Euler(0, 0, Random.Range(0, 4) * 90), 
-                        Vector3.one);
+
+                    Matrix4x4 transform = Matrix4x4.TRS(
+                        Vector3.zero,
+                        Quaternion.Euler(0, 0, Random.Range(0, 4) * 90),
+                        Vector3.one
+                    );
                     m_Tilemap.SetTransformMatrix(position, transform);
                 }
                 else
@@ -352,25 +335,257 @@ public class BoardManager : MonoBehaviour
         }
     }
 
+    // ===================== NEW + COMPAT APIs ==========================
+
+    // /// <summary>
+    // /// COMPAT: legacy signature kept alive for callers (e.g., GameStateManager).
+    // /// If you pass positionsToAvoid, they will be respected.
+    // /// If pattern logic is desired, we route to pattern placement; otherwise we place single tiles.
+    // /// </summary>
+    // public void AddObstaclesAvoidingOverlaps(List<Vector2Int> positionsToAvoid, int obstacleCount = -1) // COMPAT
+    // {
+    //     int count = (obstacleCount > 0) ? obstacleCount : m_ObstacleCount;
+
+    //     // If you have patterns configured, prefer pattern placement with 'count' patterns.
+    //     if (m_Patterns != null && m_Patterns.Count > 0)
+    //     {
+    //         AddPatternObstaclesAvoidingOverlaps(positionsToAvoid, count); // CHANGED: reuse pattern path
+    //         return;
+    //     }
+
+    //     // Fallback: single-cell scatter while avoiding walls/overlaps/reserved
+    //     m_Obstacles.Clear();
+    //     int attempts = 0;
+    //     const int maxAttempts = 2000;
+
+    //     while (m_Obstacles.Count < count && attempts < maxAttempts)
+    //     {
+    //         attempts++;
+    //         var pos = new Vector2Int(Random.Range(1, Width - 1), Random.Range(1, Height - 1));
+    //         if (IsObstaclePositionInvalid(pos)) continue;
+    //         if (positionsToAvoid != null && positionsToAvoid.Contains(pos)) continue;
+
+    //         // tentatively add and ensure connectivity if required
+    //         m_Obstacles.Add(pos);
+    //         if (m_RequireFullConnectivity && !IsBoardFullyConnected())
+    //         {
+    //             m_Obstacles.Remove(pos);
+    //             continue;
+    //         }
+    //     }
+    // }
+
+    /// <summary>
+    /// Place multi-cell obstacle patterns (lines, corners, etc.) randomly,
+    /// avoiding reserved cells and ensuring the remaining free cells stay connected.
+    /// </summary>
+    public void AddPatternObstaclesAvoidingOverlaps(List<Vector2Int> positionsToAvoid, int obstacleCount = -1)
+    {
+        // Auto-seed patterns if empty so it "just works"
+        if (m_Patterns == null || m_Patterns.Count == 0)
+        {
+            m_Patterns = new List<PatternAttributes> { line2, line3, corner, line4, L, box, snake, T };
+        }
+
+        m_Obstacles.Clear();
+
+        int target = (obstacleCount > 0) ? obstacleCount : m_ObstacleCount;
+        int attempts = 0;
+        const int maxAttempts = 4000;
+
+        while (m_Obstacles.Count < target && attempts < maxAttempts)
+        {
+            attempts++;
+
+            var pattern = m_Patterns[Random.Range(0, m_Patterns.Count)];
+            var variants = GeneratePatternVariants(pattern);
+            Shuffle(variants);
+
+            bool placed = false;
+
+            foreach (var offsets in variants)
+            {
+                // try random origins (a few times) per variant
+                for (int tries = 0; tries < 20 && !placed; tries++)
+                {
+                    Vector2Int origin = new Vector2Int(Random.Range(1, Width - 1), Random.Range(1, Height - 1));
+                    if (!CanPlacePattern(offsets, origin, positionsToAvoid)) continue;
+
+                    var added = ApplyPatternCells(offsets, origin);
+
+                    if (!m_RequireFullConnectivity || IsBoardFullyConnected())
+                    {
+                        placed = true;
+                        break;
+                    }
+                    // rollback
+                    m_Obstacles.Remove(added);
+                }
+                if (placed) break;
+            }
+            // if not placed, loop continues until attempts cap
+        }
+    }
+
+    // Create transformed variants based on rotation degrees and optional mirror
+    private List<Vector2Int[]> GeneratePatternVariants(PatternAttributes pattern)
+    {
+        var variants = new List<Vector2Int[]>();
+
+        var degrees = (pattern.CanRotate != null && pattern.CanRotate.Count > 0)
+            ? pattern.CanRotate.Distinct().Select(d => ((d % 360) + 360) % 360).ToList()
+            : new List<int> { 0 };
+
+        foreach (var deg in degrees)
+        {
+            var baseRot = RotateOffsets(pattern.Offsets, deg);
+            variants.Add(baseRot);
+            if (pattern.CanMirror)
+            {
+                variants.Add(Mirror(baseRot));
+            }
+        }
+    }
+
+    private static Vector2Int[] RotateOffsets(List<Vector2Int> src, int deg)
+    {
+        Vector2Int Rot(Vector2Int o, int d)
+        {
+            switch (d % 360)
+            {
+                case 90:  return new Vector2Int(-o.y,  o.x);
+                case 180: return new Vector2Int(-o.x, -o.y);
+                case 270: return new Vector2Int( o.y, -o.x);
+                default:  return o;
+            }
+        }
+        var dst = new Vector2Int[src.Count];
+        for (int i = 0; i < src.Count; i++) dst[i] = Rot(src[i], deg);
+        return dst;
+    }
+
+    private static Vector2Int[] Mirror(Vector2Int[] src)
+    {
+        var dst = new Vector2Int[src.Length];
+        for (int i = 0; i < src.Length; i++) dst[i] = new Vector2Int(-src[i].x, src[i].y);
+        return dst;
+    }
+
+    private bool CanPlace(Vector2Int coord, List<Vector2Int> avoid)
+    {
+        if (coord.x <= 0 || coord.y <= 0 || coord.x >= Width - 1 || coord.y >= Height - 1)
+            return false;
+
+        foreach (var pattern in m_Obstacles)
+        {
+            if (pattern.Contains(coord)) return false;
+        }
+        if (avoid != null && avoid.Contains(coord)) return false;
+        return true;
+    }
+
+    private bool CanPlacePattern(Vector2Int[] offsets, Vector2Int origin, List<Vector2Int> avoid)
+    {
+        foreach (var off in offsets)
+        {
+            var coord = origin + off;
+            if (!CanPlace(coord, avoid)) return false;
+        }
+        return true;
+    }
+
+    private List<Vector2Int> ApplyPatternCells(Vector2Int[] offsets, Vector2Int origin)
+    {
+        var added = new List<Vector2Int>(offsets.Length);
+        foreach (var off in offsets)
+        {
+            var p = origin + off;
+            added.Add(p);
+        }
+        m_Obstacles.Add(added);
+
+        return added;
+    }
+
+    private bool IsBoardFullyConnected() // make sure obstacles haven't cut off board
+    {
+        int totalPassable = 0;
+        Vector2Int? seed = null;
+
+        for (int y = 0; y < Height; y++)
+        {
+            for (int x = 0; x < Width; x++)
+            {
+                bool isBorder   = (x == 0 || y == 0 || x == Width - 1 || y == Height - 1);
+                bool isObstacle = false;
+                foreach (var pattern in m_Obstacles)
+                {
+                    if (m_Obstacles.Contains(new Vector2Int(x, y))) isObstacle = true;
+                }
+                bool passable   = !isBorder && !isObstacle;
+                if (passable)
+                {
+                    totalPassable++;
+                    if (!seed.HasValue) seed = new Vector2Int(x, y);
+                }
+            }
+        }
+
+        if (totalPassable == 0) return true;
+
+        var visited = new HashSet<Vector2Int>();
+        var q = new Queue<Vector2Int>();
+        q.Enqueue(seed.Value);
+        visited.Add(seed.Value);
+
+        while (q.Count > 0)
+        {
+            var c = q.Dequeue();
+            foreach (var d in kDirs)
+            {
+                var n = c + d;
+                if (n.x <= 0 || n.y <= 0 || n.x >= Width - 1 || n.y >= Height - 1) continue;
+                if (visited.Contains(n)) continue;
+                foreach (var pattern in m_Obstacles)
+                {
+                    if (m_Obstacles.Contains(n)) continue; // blocked
+                }
+                visited.Add(n);
+                q.Enqueue(n);
+            }
+        }
+
+        return visited.Count == totalPassable;
+    }
+
+    private static void Shuffle<T>(List<T> list)
+    {
+        for (int i = 0; i < list.Count; i++)
+        {
+            int j = Random.Range(i, list.Count);
+            (list[i], list[j]) = (list[j], list[i]);
+        }
+    }
+
 #if UNITY_EDITOR
     [ContextMenu("Initialize Board for Debug")]
     private void InitializeBoardForDebug()
     {
         InitializeBoardWithoutObstacles();
-        
+
         UnityEditor.SceneView.RepaintAll();
         UnityEditor.EditorUtility.SetDirty(this);
     }
-    
+
     [ContextMenu("Initialize Board with Obstacles for Debug")]
     private void InitializeBoardWithObstaclesForDebug()
     {
         InitializeBoard();
-        
+
         UnityEditor.SceneView.RepaintAll();
         UnityEditor.EditorUtility.SetDirty(this);
     }
-    
+
     [ContextMenu("Clear Board")]
     private void ClearBoard()
     {
