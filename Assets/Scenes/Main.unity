@@ -1142,6 +1142,7 @@ MonoBehaviour:
   robber: {fileID: 1115229378}
   cop: {fileID: 1029871678}
   treasureManager: {fileID: 701692111}
+  indicatorSprite: {fileID: 0}
   playerStartPosition: {x: 1, y: 1}
   treasureCount: 5
   obstacleCount: 8

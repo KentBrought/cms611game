@@ -15,6 +15,13 @@ public class GameStateManager : MonoBehaviour
     [SerializeField]
     private TreasureManager treasureManager;
     
+    [Header("Indicator Settings")]
+    [SerializeField]
+    private Sprite indicatorSprite;
+    
+    private PlayerIndicatorController robberIndicator;
+    private PlayerIndicatorController copIndicator;
+    
     [Header("Player Settings")]
     [SerializeField]
     private Vector2Int playerStartPosition = new Vector2Int(1, 1);
@@ -92,6 +99,59 @@ public class GameStateManager : MonoBehaviour
             cop.SpawnWithRole(boardManager, copPos, PlayerRole.Cop);
             if (treasureManager != null) treasureManager.RegisterPlayer(cop);
         }
+        
+        // Setup indicators after players are spawned
+        SetupIndicators();
+    }
+    
+    private void SetupIndicators()
+    {
+        if (boardManager == null) return;
+        
+        // Create robber indicator (starts at cop's position)
+        if (robber != null && cop != null)
+        {
+            GameObject robberIndicatorObj = CreateIndicatorObject("RobberIndicator");
+            robberIndicator = robberIndicatorObj.GetComponent<PlayerIndicatorController>();
+            robberIndicator.Initialize(boardManager, PlayerRole.Robber, cop.GetCellPosition());
+        }
+        
+        // Create cop indicator (starts at robber's position)
+        if (cop != null && robber != null)
+        {
+            GameObject copIndicatorObj = CreateIndicatorObject("CopIndicator");
+            copIndicator = copIndicatorObj.GetComponent<PlayerIndicatorController>();
+            copIndicator.Initialize(boardManager, PlayerRole.Cop, robber.GetCellPosition());
+        }
+        
+        // Set initial indicator visibility after indicators are created
+        TurnManager turnManager = FindFirstObjectByType<TurnManager>();
+        if (turnManager != null)
+        {
+            turnManager.InitializeIndicatorVisibility();
+        }
+    }
+    
+    private GameObject CreateIndicatorObject(string name)
+    {
+        GameObject indicatorObj = new GameObject(name);
+        
+        // Set scale to 0.1 on x and y axes
+        indicatorObj.transform.localScale = new Vector3(0.1f, 0.1f, 1f);
+        
+        // Add SpriteRenderer
+        SpriteRenderer spriteRenderer = indicatorObj.AddComponent<SpriteRenderer>();
+        if (indicatorSprite != null)
+        {
+            spriteRenderer.sprite = indicatorSprite;
+        }
+        spriteRenderer.sortingOrder = 5; // Above players but below UI
+        spriteRenderer.color = new Color(1f, 1f, 1f, 0.8f); // Semi-transparent
+        
+        // Add PlayerIndicatorController
+        PlayerIndicatorController controller = indicatorObj.AddComponent<PlayerIndicatorController>();
+        
+        return indicatorObj;
     }
     
     private void SetupObstacles()
@@ -239,5 +299,16 @@ public class GameStateManager : MonoBehaviour
             GameObject moveTrackerObj = new GameObject("MoveTracker");
             moveTrackerObj.AddComponent<MoveTracker>();
         }
+    }
+    
+    public PlayerIndicatorController GetIndicatorForRole(PlayerRole role)
+    {
+        return role == PlayerRole.Robber ? robberIndicator : copIndicator;
+    }
+    
+    public Vector2Int GetIndicatorPosition(PlayerRole role)
+    {
+        PlayerIndicatorController indicator = GetIndicatorForRole(role);
+        return indicator != null ? indicator.GetCellPosition() : Vector2Int.zero;
     }
 }

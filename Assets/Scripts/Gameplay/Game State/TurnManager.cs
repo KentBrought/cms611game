@@ -76,6 +76,12 @@ public class TurnManager : MonoBehaviour
         GameSceneManager.Instance.LoadTransitionScreen();
         if (nextTurnButton != null) nextTurnButton.interactable = false;
     }
+    
+    public void InitializeIndicatorVisibility()
+    {
+        // This method should be called after indicators are created to set initial visibility
+        ToggleIndicatorVisibility();
+    }
 
     private void UpdateTurnCounter()
     {
@@ -126,6 +132,22 @@ public class TurnManager : MonoBehaviour
             if (sr != null)
             {
                 sr.enabled = (p.GetRole() == activeRole);
+            }
+        }
+        
+        // Also toggle indicator visibility
+        ToggleIndicatorVisibility();
+    }
+    
+    private void ToggleIndicatorVisibility()
+    {
+        PlayerIndicatorController[] indicators = FindObjectsByType<PlayerIndicatorController>(FindObjectsSortMode.None);
+        foreach (PlayerIndicatorController indicator in indicators)
+        {
+            var sr = indicator.GetComponent<SpriteRenderer>();
+            if (sr != null)
+            {
+                sr.enabled = (indicator.GetIndicatorRole() == activeRole);
             }
         }
     }
