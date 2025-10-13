@@ -246,7 +246,7 @@ public class BoardManager : MonoBehaviour
     {
         foreach (var pattern in m_Obstacles)
         {
-            if (pattern.Contains(coord)) return true;
+            if (pattern.Contains(position)) return true;
         };
 
         if (position.x == 0 || position.y == 0 || position.x == Width - 1 || position.y == Height - 1)
@@ -318,7 +318,7 @@ public class BoardManager : MonoBehaviour
                 bool isObstacle = false; 
                 foreach (var pattern in m_Obstacles)
                 {
-                    if (pattern.Contains(new Vector2Int(x, y))) return true;
+                    if (pattern.Contains(new Vector2Int(x, y))) isObstacle = true;
                 }
 
                 if (isWall || isObstacle)
@@ -345,46 +345,6 @@ public class BoardManager : MonoBehaviour
             }
         }
     }
-
-    // ===================== NEW + COMPAT APIs ==========================
-
-    // /// <summary>
-    // /// COMPAT: legacy signature kept alive for callers (e.g., GameStateManager).
-    // /// If you pass positionsToAvoid, they will be respected.
-    // /// If pattern logic is desired, we route to pattern placement; otherwise we place single tiles.
-    // /// </summary>
-    // public void AddObstaclesAvoidingOverlaps(List<Vector2Int> positionsToAvoid, int obstacleCount = -1) // COMPAT
-    // {
-    //     int count = (obstacleCount > 0) ? obstacleCount : m_ObstacleCount;
-
-    //     // If you have patterns configured, prefer pattern placement with 'count' patterns.
-    //     if (m_Patterns != null && m_Patterns.Count > 0)
-    //     {
-    //         AddPatternObstaclesAvoidingOverlaps(positionsToAvoid, count); // CHANGED: reuse pattern path
-    //         return;
-    //     }
-
-    //     // Fallback: single-cell scatter while avoiding walls/overlaps/reserved
-    //     m_Obstacles.Clear();
-    //     int attempts = 0;
-    //     const int maxAttempts = 2000;
-
-    //     while (m_Obstacles.Count < count && attempts < maxAttempts)
-    //     {
-    //         attempts++;
-    //         var pos = new Vector2Int(Random.Range(1, Width - 1), Random.Range(1, Height - 1));
-    //         if (IsObstaclePositionInvalid(pos)) continue;
-    //         if (positionsToAvoid != null && positionsToAvoid.Contains(pos)) continue;
-
-    //         // tentatively add and ensure connectivity if required
-    //         m_Obstacles.Add(pos);
-    //         if (m_RequireFullConnectivity && !IsBoardFullyConnected())
-    //         {
-    //             m_Obstacles.Remove(pos);
-    //             continue;
-    //         }
-    //     }
-    // }
 
     /// <summary>
     /// Place multi-cell obstacle patterns (lines, corners, etc.) randomly,
@@ -528,13 +488,13 @@ public class BoardManager : MonoBehaviour
         {
             for (int x = 0; x < Width; x++)
             {
-                bool isBorder   = (x == 0 || y == 0 || x == Width - 1 || y == Height - 1);
+                bool isBorder = x == 0 || y == 0 || x == Width - 1 || y == Height - 1;
                 bool isObstacle = false;
                 foreach (var pattern in m_Obstacles)
                 {
                     if (pattern.Contains(new Vector2Int(x, y))) isObstacle = true;
                 }
-                bool passable   = !isBorder && !isObstacle;
+                bool passable = !isBorder && !isObstacle;
                 if (passable)
                 {
                     totalPassable++;
