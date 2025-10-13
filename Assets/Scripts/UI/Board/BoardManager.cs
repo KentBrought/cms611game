@@ -183,7 +183,11 @@ public class BoardManager : MonoBehaviour
                 m_BoardData[x, y] = new CellData();
 
                 bool isWall = (x == 0 || y == 0 || x == Width - 1 || y == Height - 1);
-                bool isObstacle = m_Obstacles.Contains(new Vector2Int(x, y));
+                bool isObstacle = false;
+                foreach (var pattern in m_Obstacles)
+                {
+                    if (pattern.Contains(new Vector2Int(x, y))) isObstacle = true;
+                }
 
                 if (isWall || isObstacle)
                 {
@@ -240,7 +244,10 @@ public class BoardManager : MonoBehaviour
 
     private bool IsObstaclePositionInvalid(Vector2Int position)
     {
-        if (m_Obstacles.Contains(position)) return true;
+        foreach (var pattern in m_Obstacles)
+        {
+            if (pattern.Contains(coord)) return true;
+        };
 
         if (position.x == 0 || position.y == 0 || position.x == Width - 1 || position.y == Height - 1)
             return true;
@@ -308,7 +315,11 @@ public class BoardManager : MonoBehaviour
             for (int x = 0; x < Width; ++x)
             {
                 bool isWall = x == 0 || y == 0 || x == Width - 1 || y == Height - 1;
-                bool isObstacle = m_Obstacles.Contains(new Vector2Int(x, y));
+                bool isObstacle = false; 
+                foreach (var pattern in m_Obstacles)
+                {
+                    if (pattern.Contains(new Vector2Int(x, y))) return true;
+                }
 
                 if (isWall || isObstacle)
                 {
@@ -521,7 +532,7 @@ public class BoardManager : MonoBehaviour
                 bool isObstacle = false;
                 foreach (var pattern in m_Obstacles)
                 {
-                    if (m_Obstacles.Contains(new Vector2Int(x, y))) isObstacle = true;
+                    if (pattern.Contains(new Vector2Int(x, y))) isObstacle = true;
                 }
                 bool passable   = !isBorder && !isObstacle;
                 if (passable)

@@ -187,7 +187,7 @@ public class GameStateManager : MonoBehaviour
     private bool IsValidPlayerPosition(Vector2Int position)
     {
         CellData cellData = boardManager.GetCellData(position);
-        if (!cellData || !cellData.Passable)
+        if (cellData == null || !cellData.Passable)
         {
             return false;
         }
