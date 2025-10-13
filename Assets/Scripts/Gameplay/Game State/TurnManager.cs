@@ -15,7 +15,10 @@ public class TurnManager : MonoBehaviour
     public Button lieDownButton;
     public Button lieLeftButton;
     public Button lieRightButton;
-    public Text liesCounterText; 
+    public Text liesCounterText;
+    
+    [Header("Move Replay Pad")]
+    public MoveReplayPad moveReplayPad; 
     private int turnCount = 1;
     private int currentMovementSteps = 0;
     private int maxMovementSteps = 0;
@@ -89,6 +92,13 @@ public class TurnManager : MonoBehaviour
         UpdateTurnCounter();
         
         activeRole = (activeRole == PlayerRole.Robber) ? PlayerRole.Cop : PlayerRole.Robber;
+        
+        // Show move replay pad for new turn BEFORE clearing moves
+        if (moveReplayPad != null)
+        {
+            moveReplayPad.OnTurnChanged(activeRole);
+        }
+        
         DisplayPreviousPlayerMoves();
         ToggleActivePlayerVisibility();
         UpdateTreasureVisibility();
