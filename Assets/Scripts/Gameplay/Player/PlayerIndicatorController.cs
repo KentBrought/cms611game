@@ -9,6 +9,7 @@ public class PlayerIndicatorController : MonoBehaviour
     private SpriteRenderer spriteRenderer;
     private BoardManager board;
     private Vector2Int cellPosition;
+    private bool isMoving = false;
     private TurnManager turnManager;
     private GameStateManager gameStateManager;
     
@@ -67,6 +68,8 @@ public class PlayerIndicatorController : MonoBehaviour
     
     private void Update()
     {
+        if (isMoving) return;
+        
         // Only allow movement when it's this indicator's player's turn
         if (turnManager == null || turnManager.GetActiveRole() != indicatorForRole)
         {
@@ -106,7 +109,9 @@ public class PlayerIndicatorController : MonoBehaviour
                 CellData cellData = board.GetCellData(newCellTarget);
                 if (cellData != null && cellData.Passable)
                 {
+                    isMoving = true;
                     MoveTo(newCellTarget);
+                    Invoke(nameof(ResetMovingFlag), 0.1f);
                 }
             }
         }
@@ -120,6 +125,11 @@ public class PlayerIndicatorController : MonoBehaviour
     public PlayerRole GetIndicatorRole()
     {
         return indicatorForRole;
+    }
+    
+    private void ResetMovingFlag()
+    {
+        isMoving = false;
     }
     
 }
