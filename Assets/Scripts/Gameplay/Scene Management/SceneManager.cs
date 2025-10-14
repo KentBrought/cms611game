@@ -26,6 +26,7 @@ public class GameSceneManager : MonoBehaviour
     private float m_TitleDisplayDuration = 4.0f; // increase default display time
     
     private bool m_TitleSequenceStarted = false;
+    private bool m_IsLoadingScene = false;
     
     private static GameSceneManager s_Instance;
     private readonly System.Collections.Generic.List<GameObject> m_DeactivatedRoots = new System.Collections.Generic.List<GameObject>();
@@ -90,29 +91,35 @@ public class GameSceneManager : MonoBehaviour
     
     public void LoadMainGameAsCop()
     {
+        if (m_IsLoadingScene) return;
         RoleSelectionManager.Instance.SetPlayerRole(PlayerRole.Cop);
         StartCoroutine(LoadScene(m_MainGameSceneName));
     }
     
     public void LoadMainGameAsRobber()
     {
+        if (m_IsLoadingScene) return;
         RoleSelectionManager.Instance.SetPlayerRole(PlayerRole.Robber);
         StartCoroutine(LoadScene(m_MainGameSceneName));
     }
     
     public void LoadHomeScreen()
     {
+        if (m_IsLoadingScene) return;
         StartCoroutine(LoadScene(m_HomeScreenSceneName));
     }
     
     public void LoadWinScreen(string winMessage = "Congrats! You've won.")
     {
+        if (m_IsLoadingScene) return;
         WinScreenManager.SetWinMessage(winMessage);
         StartCoroutine(LoadScene(m_WinSceneName));
     }
     
     private IEnumerator LoadScene(string sceneName)
     {
+        m_IsLoadingScene = true;
+        
         AsyncOperation asyncLoad = SceneManager.LoadSceneAsync(sceneName);
         while (!asyncLoad.isDone)
         {
@@ -128,6 +135,8 @@ public class GameSceneManager : MonoBehaviour
             Debug.Log("Setting up HomeScreen UI interactivity...");
             EnsureUIInteractive();
         }
+        
+        m_IsLoadingScene = false;
     }
     
     public void QuitGame()
