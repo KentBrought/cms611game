@@ -80,3 +80,5 @@ crashlytics-build.properties
 
 # Plugins
 /[Aa]ssets/[Pp]lugins/*
+
+.DS_Store
