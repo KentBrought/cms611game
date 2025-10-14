@@ -1,5 +1,7 @@
 # CMS. 611 (Creating Video Games) Project - Concurrent Chase
 
+Play our game at: https://kbrought.itch.io/concurrent-chase
+
 We started our code with base code from: https://github.mit.edu/MITGameLab/unity-game-design-intro.
 
 # Versioning
